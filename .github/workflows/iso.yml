@@ -80,7 +80,7 @@ jobs:
         run: |
           args="--kernel-dir=$PWD/prebuilt-kernel"
           if [ "${{ inputs.skip_aur }}" = "true" ]; then args="$args --skip-aur"; fi
-          SUDO_USER=builder ./iso/build.sh $args
+          SUDO_USER=builder bash ./iso/build.sh $args
 
       - name: Checksum
         run: |

@@ -31,7 +31,7 @@ _find() {
 }
 
 prune="$src/15-prune.conf"
-"$here/prune-drivers.sh" "$here/config" "$prune" \
+python3 "$here/prune-drivers.sh" "$here/config" "$prune" \
     "$(_find 20-mba62.conf)" "$(_find 30-tuning.conf)"
 
 fragments=(
@@ -53,7 +53,7 @@ echo ":: make olddefconfig"
 make -C "$src" olddefconfig >/dev/null
 
 echo ":: verifying"
-"$here/verify-config.sh" "$src/.config" "${fragments[@]}"
+bash "$here/verify-config.sh" "$src/.config" "${fragments[@]}"
 
 if [[ -n $out ]]; then
     cp "$src/.config" "$out"

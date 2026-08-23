@@ -126,9 +126,12 @@ prepare() {
     # runs olddefconfig, then asserts that everything in
     # critical-symbols.txt survived. It exits non-zero if it did not, which
     # fails the build rather than shipping a kernel that will not boot.
+    # Invoked through bash rather than executed directly: makepkg symlinks
+    # local sources into $srcdir, and in a CI checkout those point at files
+    # owned by another user, so neither the exec bit nor a chmod to fix it can
+    # be relied on.
     echo "Generating debloated config..."
-    chmod +x ../gen-config.sh ../verify-config.sh ../prune-drivers.sh
-    ../gen-config.sh "$PWD"
+    bash ../gen-config.sh "$PWD"
 
     ### CPU baseline
     case "${_processor_opt,,}" in
@@ -180,7 +183,7 @@ prepare() {
 
     ### The toggles above can only relax the config, never re-add a driver,
     ### so re-assert the contract before spending an hour compiling.
-    ../verify-config.sh .config \
+    bash ../verify-config.sh .config \
         ../10-strip.conf ../20-mba62.conf ../30-tuning.conf
 
     [ "$_makenconfig" = "yes" ] && make nconfig

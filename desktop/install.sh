@@ -134,7 +134,7 @@ if [[ ! -e $rc ]]; then
 fi
 if [[ -e $rc || $dry_run == 1 ]]; then
     echo ":: merging key bindings into rc.xml"
-    run "$here/merge-keybindings.py" "$rc" "$here/skel/.config/openbox/keybindings.xml"
+    run python3 "$here/merge-keybindings.py" "$rc" "$here/skel/.config/openbox/keybindings.xml"
     run chown "$target_user:$target_user" "$rc"
 fi
 
