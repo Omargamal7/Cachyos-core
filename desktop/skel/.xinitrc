@@ -3,7 +3,9 @@
 # its autostart file runs and the session ends cleanly on logout.
 
 userresources=$HOME/.Xresources
-[ -f "$userresources" ] && xrdb -merge "$userresources"
+if [ -f "$userresources" ] && command -v xrdb >/dev/null 2>&1; then
+    xrdb -merge "$userresources"
+fi
 
 # The panel, xfsettingsd and friends live in ~/.config/openbox/autostart.
 exec openbox-session

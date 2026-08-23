@@ -95,10 +95,10 @@ Anything below can come back by editing `kernel/fragments/10-strip.conf` (or
 
 ## Kept on purpose, even though it looks like bloat
 
-* **`SERIO_I8042`, `KEYBOARD_ATKBD`, `MOUSE_PS2`** — this machine's keyboard
-  and trackpad are USB, so in theory these are dead weight. They are built in
-  anyway: they cost a few tens of kilobytes, and being wrong about it means a
-  laptop with no keyboard at boot.
+* **`SERIO_I8042` and `KEYBOARD_ATKBD` (built in), `MOUSE_PS2` (module)** —
+  this machine's keyboard and trackpad are USB, so in theory all three are
+  dead weight. They stay anyway: they cost a few tens of kilobytes, and being
+  wrong about it means a laptop with no keyboard at boot.
 * **`MMC_REALTEK_PCI` and friends** — three modules covering the possibility
   that a given unit's SD reader is PCIe rather than USB.
 * **`BRCMFMAC`** — for units serviced with a 43602-based card.

@@ -6,6 +6,7 @@
 xorg-server
 xorg-xinit
 xorg-xrandr
+xorg-xrdb
 xorg-xset
 # Haswell works well with xorg-server's built-in modesetting driver.
 # xf86-video-intel is the older SNA/UXA driver -- only add it if you hit
@@ -28,6 +29,10 @@ xfconf
 
 [terminal]
 terminator
+
+[extras]
+# Bound to Print in the Openbox key bindings.
+xfce4-screenshooter
 
 [files]
 nemo

@@ -92,8 +92,11 @@ triggers `cancel_protect_slice()`.
 
 ### Retiring the fixup
 
-When CachyOS refreshes the 6.18 BORE patch, the fixup will stop applying and
-the build will fail loudly at `prepare()`. At that point:
+The BORE patch is fetched from `master` of `cachyos/kernel-patches`, which
+is a moving target, and its `b2sum` is pinned here. So when CachyOS
+refreshes it you get a checksum failure from `makepkg` before anything is
+built — which is the point: it forces a look rather than silently applying a
+patch on top of a patch. At that point:
 
 1. Check whether `sched/0001-bore-cachy.patch` applies again — if it does,
    switch `_patchsource` back to `sched/` in the PKGBUILD.

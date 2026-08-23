@@ -41,12 +41,18 @@ have pacman || { echo "this script targets Arch/CachyOS (pacman not found)" >&2;
 
 aur_helper="$(command -v paru || command -v yay || true)"
 aur_install() {
-    if [[ -n $aur_helper ]]; then
-        run sudo -u "${SUDO_USER:-nobody}" "$aur_helper" -S --needed --noconfirm "$@"
-    else
+    if [[ -z $aur_helper ]]; then
         echo "!! $* needs an AUR helper (paru or yay); install one and re-run" >&2
         return 1
     fi
+    # AUR helpers refuse to run as root, so this needs the invoking user.
+    if [[ -z ${SUDO_USER:-} || $SUDO_USER == root ]]; then
+        echo "!! $* must be built as a normal user, but SUDO_USER is not set." >&2
+        echo "!! Run this script with sudo from your own account, or install" >&2
+        echo "!! $* yourself and re-run with the matching --skip- flag." >&2
+        return 1
+    fi
+    run sudo -u "$SUDO_USER" "$aur_helper" -S --needed --noconfirm "$@"
 }
 
 # ------------------------------------------------------------ sanity check --

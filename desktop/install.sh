@@ -147,7 +147,8 @@ fi
 # ----------------------------------------------------------------- services --
 echo ":: enabling services"
 run systemctl enable NetworkManager.service
-run sudo -u "$target_user" systemctl --user enable pipewire.service pipewire-pulse.service wireplumber.service
+# PipeWire needs nothing enabled here: its packages ship the user units
+# already wanted by default.target, and it is socket-activated on first use.
 
 cat <<'DONE'
 
