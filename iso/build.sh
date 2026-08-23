@@ -6,8 +6,8 @@
 #   --kernel-dir=DIR   directory holding prebuilt linux-cachyos-bore-mba62
 #                      packages. Without it the kernel is built from
 #                      kernel/ here, which takes an hour or two.
-#   --skip-aur         do not build the AUR packages (Chrome, mbpfan, obconf).
-#                      The ISO still works; those programs are just absent.
+#   --skip-aur         do not build the AUR packages (Chrome, mbpfan,
+#                      facetimehd). The ISO still works; those are absent.
 #   --out=DIR          where to put the ISO (default: out/)
 #
 # Must run on Arch or CachyOS, as root, with archiso installed.
@@ -74,10 +74,14 @@ fi
 
 # ------------------------------------------------------------------- AUR ----
 # Chrome is not in any pacman repository, and neither are the fan daemon or
-# the Openbox settings GUI. Each is a small build; google-chrome in particular
-# is just a repack of Google's .deb.
+# the camera driver. google-chrome is just a repack of Google's .deb;
+# facetimehd-firmware extracts the camera firmware from an Apple driver
+# package, so that one needs a working network connection to build.
+#
+# Any of these failing is survivable -- the ISO is still complete without
+# them -- so a failure is reported and the build carries on.
 if [[ $skip_aur == 0 ]]; then
-    for pkg in google-chrome mbpfan obconf; do
+    for pkg in google-chrome mbpfan-git facetimehd-firmware facetimehd-dkms; do
         echo ":: building $pkg from the AUR"
         d="$(mktemp -d)"; chown "$build_user" "$d"
         if as_builder git clone -q --depth 1 "https://aur.archlinux.org/$pkg.git" "$d/$pkg" 2>/dev/null; then
@@ -101,7 +105,7 @@ repo-add -q "$localrepo/mba62.db.tar.gz" "$localrepo"/*.pkg.tar.zst
 # build does not fail the whole ISO.
 pkglist="$(mktemp)"
 cp "$here/packages.x86_64" "$pkglist"
-for pkg in google-chrome mbpfan obconf; do
+for pkg in google-chrome mbpfan-git facetimehd-firmware facetimehd-dkms; do
     if compgen -G "$localrepo/$pkg-*.pkg.tar.zst" >/dev/null; then
         echo "$pkg" >> "$pkglist"
     fi

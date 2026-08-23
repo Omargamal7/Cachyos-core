@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       skip_aur:
-        description: 'Skip the AUR builds (Chrome, mbpfan, obconf)'
+        description: 'Skip the AUR builds (Chrome, mbpfan, facetimehd)'
         type: boolean
         default: false
   push:

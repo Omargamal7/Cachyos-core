@@ -14,7 +14,10 @@ xorg-xset
 
 [wm]
 openbox
-obconf
+# obconf was dropped from Arch; obconf-qt is the maintained replacement. It
+# pulls Qt, which is the one non-trivial dependency in this list -- drop it if
+# you would rather edit rc.xml by hand.
+obconf-qt
 picom
 feh
 i3lock

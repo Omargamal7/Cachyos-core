@@ -36,7 +36,7 @@
       <action name="Execute"><command>pavucontrol</command></action>
     </item>
     <item label="Window Manager">
-      <action name="Execute"><command>obconf</command></action>
+      <action name="Execute"><command>obconf-qt</command></action>
     </item>
   </menu>
   <separator />

@@ -103,18 +103,26 @@ What you should find working, with nothing to configure:
 Right-click the desktop for the Openbox menu. `Super` is the Command key:
 `Super+Return` for a terminal, `Super+E` for files, `Super+B` for Chrome.
 
-### Not set up by the ISO
+### The two that may or may not be there
 
-**The FaceTime HD camera.** Its firmware is not redistributable — it has to be
-extracted from an Apple driver package, which needs a network connection. Once
-you are online:
+The camera driver and the fan daemon are built from the AUR while the ISO is
+assembled, and the build is allowed to fail rather than take the whole image
+down with it — `facetimehd-firmware` in particular has to pull the firmware
+out of an Apple driver package at build time, which needs a working network
+on the build machine.
+
+Check what you actually got:
 
 ```sh
-sudo hardware/mba62/install.sh --skip-wifi --skip-fan
+modinfo facetimehd >/dev/null 2>&1 && echo "camera driver present"
+systemctl status mbpfan
 ```
 
-**Fan control** is included but `mbpfan` is only enabled if the AUR build
-succeeded during the ISO build. Check with `systemctl status mbpfan`.
+If either is missing, install it once you are online:
+
+```sh
+sudo hardware/mba62/install.sh --skip-wifi
+```
 
 ## 6. Keeping the kernel current
 

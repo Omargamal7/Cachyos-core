@@ -59,6 +59,7 @@ xorg-xset
 
 ## window manager and session
 openbox
+obconf-qt
 picom
 feh
 i3lock
