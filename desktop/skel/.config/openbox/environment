@@ -1,0 +1,10 @@
+# Sourced by openbox-session before the session starts.
+
+# Tell GTK apps and Chrome which toolkit backend and theme to use.
+export XDG_CURRENT_DESKTOP=XFCE
+export GTK_THEME=Adwaita:dark
+export QT_QPA_PLATFORMTHEME=gtk2
+
+# Chrome picks its password store from this; without it Chrome tries to
+# talk to gnome-keyring or kwallet and stalls on first launch.
+export CHROME_PASSWORD_STORE=basic

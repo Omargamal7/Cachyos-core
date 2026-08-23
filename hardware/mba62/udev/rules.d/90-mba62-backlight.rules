@@ -1,0 +1,10 @@
+# Let users in the "video" group set panel and keyboard brightness without
+# root. brightnessctl ships a similar rule; this covers the applesmc
+# keyboard LED, which it does not.
+ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="intel_backlight", \
+    RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", \
+    RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
+
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="smc::kbd_backlight", \
+    RUN+="/bin/chgrp video /sys/class/leds/%k/brightness", \
+    RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness"

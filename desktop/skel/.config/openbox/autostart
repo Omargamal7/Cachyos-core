@@ -1,0 +1,36 @@
+# Openbox autostart -- everything a session needs when there is no
+# xfce4-session or GNOME session to do it for us.
+
+# XSettings: fonts, themes, cursors, and Xft settings for GTK apps.
+# xfce4-panel and Nemo both read from it.
+xfsettingsd &
+
+# Compositor. Haswell + Openbox tears badly on video without one; picom's
+# defaults are enough here.
+picom -b &
+
+# Panel.
+xfce4-panel &
+
+# Power: battery icon, lid handling, and the brightness keys.
+xfce4-power-manager &
+
+# Notifications (dbus-activated, but starting it avoids a first-use delay).
+/usr/lib/xfce4/notifyd/xfce4-notifyd &
+
+# Network applet in the system tray.
+nm-applet &
+
+# PolicyKit agent -- without one, Nemo cannot mount internal partitions and
+# anything asking for authentication silently fails.
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+
+# Wallpaper. Drop a file at ~/.config/openbox/wallpaper.jpg to use your own.
+if [ -f "$HOME/.config/openbox/wallpaper.jpg" ]; then
+    feh --bg-fill "$HOME/.config/openbox/wallpaper.jpg" &
+else
+    xsetroot -solid "#1d2021" &
+fi
+
+# Standard user directories (Desktop, Downloads, ...) on first login.
+xdg-user-dirs-update &

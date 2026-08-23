@@ -1,0 +1,74 @@
+Subject: [PATCH] bore: adapt the slice-protection bypass to preempt_wakeup_action
+
+CachyOS's 6.18 BORE patch does not build against 6.18.36 and later.
+
+Linux 6.18.36 reworked check_preempt_wakeup_fair(): the local `bool
+do_preempt_short` was replaced by `enum preempt_wakeup_action
+preempt_action`, with PREEMPT_WAKEUP_SHORT standing in for what
+do_preempt_short used to mean ("ignore current's slice protection").
+
+Both copies of the BORE patch in cachyos/kernel-patches still target the
+older shape, in different ways:
+
+  * 6.18/sched/0001-bore-cachy.patch     -- fails to apply (one hunk in
+    check_preempt_wakeup_fair() is rejected).
+  * 6.18/sched-dev/0001-bore-cachy.patch -- applies cleanly but does not
+    compile: its hunk assigns to do_preempt_short, which no longer exists.
+        kernel/sched/fair.c: In function 'check_preempt_wakeup_fair':
+        kernel/sched/fair.c:9010:17: error: 'do_preempt_short' undeclared
+
+This adapts the sched-dev hunk. The BORE block's own comment describes it
+as the companion to the in-tree PREEMPT_SHORT path, so it is moved to sit
+directly after that check and given the same treatment it now has:
+
+        preempt_action = PREEMPT_WAKEUP_SHORT;
+        goto pick;
+
+which is exactly what `do_preempt_short = true` used to produce -- at
+`pick:` the flag selects pick_next_entity()'s non-protecting variant, and
+at `preempt:` it triggers cancel_protect_slice(). Moving the call also
+means do_preempt_weight() now runs after `cfs_rq = cfs_rq_of(se)` and
+update_curr(), so entity_eligible() is evaluated against the same, updated
+cfs_rq the surrounding checks use, rather than task_cfs_rq(donor).
+
+Apply after 0001-bore-cachy.patch (sched-dev). Drop this file once
+upstream refreshes the 6.18 BORE patch for the new enum.
+---
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -9000,16 +9000,6 @@
+ 	if (unlikely(se == pse))
+ 		return;
+ 
+-#ifdef CONFIG_SCHED_BORE
+-	/*
+-	 * Likewise, if @p is heavier than current (under BORE: more
+-	 * interactive), per kernel.sched_burst_protect_slice_lv, override
+-	 * current's slice protection to allow preemption.
+-	 */
+-	if (do_preempt_weight(cfs_rq, pse, se))
+-		do_preempt_short = true;
+-#endif
+-
+ 	/*
+ 	 * This is possible from callers such as attach_tasks(), in which we
+ 	 * unconditionally wakeup_preempt() after an enqueue (which may have
+@@ -9074,6 +9064,18 @@
+ 		goto pick;
+ 	}
+ 
++#ifdef CONFIG_SCHED_BORE
++	/*
++	 * Likewise, if @p is heavier than current (under BORE: more
++	 * interactive), per kernel.sched_burst_protect_slice_lv, override
++	 * current's slice protection to allow preemption.
++	 */
++	if (do_preempt_weight(cfs_rq, pse, se)) {
++		preempt_action = PREEMPT_WAKEUP_SHORT;
++		goto pick;
++	}
++#endif /* CONFIG_SCHED_BORE */
++
+ 	/*
+ 	 * Ignore wakee preemption on WF_FORK as it is less likely that
+ 	 * there is shared data as exec often follow fork. Do not

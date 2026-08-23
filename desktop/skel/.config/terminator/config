@@ -1,0 +1,25 @@
+[global_config]
+  title_transmit_bg_color = "#3f6fa0"
+  focus = system
+  suppress_multiple_term_dialog = True
+[keybindings]
+[layouts]
+  [[default]]
+    [[[child1]]]
+      parent = window0
+      type = Terminal
+    [[[window0]]]
+      parent = ""
+      size = 900, 560
+      type = Window
+[plugins]
+[profiles]
+  [[default]]
+    background_color = "#1d2021"
+    cursor_color = "#d4be98"
+    font = DejaVu Sans Mono 11
+    foreground_color = "#d4be98"
+    scrollback_infinite = True
+    show_titlebar = False
+    use_system_font = False
+    palette = "#1d2021:#ea6962:#a9b665:#d8a657:#7daea3:#d3869b:#89b482:#d4be98:#3c3836:#ea6962:#a9b665:#d8a657:#7daea3:#d3869b:#89b482:#ddc7a1"

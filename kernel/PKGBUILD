@@ -1,0 +1,280 @@
+# Maintainer: Omar Gamal <omargamal7@gmail.com>
+#
+# linux-cachyos-bore-mba62 -- CachyOS 6.18 LTS + BORE, configured for exactly
+# one machine: a MacBookAir6,2. See ../docs/BUILD.md.
+#
+# Derived from CachyOS's linux-cachyos-lts PKGBUILD
+# (https://github.com/CachyOS/linux-cachyos), trimmed to the options that
+# matter here and taught to run the debloat pipeline in kernel/.
+
+### Tick rate -- 1000Hz keeps a desktop responsive; 300Hz saves a little power.
+: "${_HZ_ticks:=1000}"
+
+### Preemption model: full | lazy | voluntary | none
+: "${_preempt:=full}"
+
+### CPU baseline. Haswell-ULT implements x86-64-v3 (AVX2/BMI2/FMA), so
+### generic_v3 is both correct for this laptop and safe to cross-build on
+### another machine -- unlike 'native', which bakes in the *builder's* CPU.
+### Values: generic_v1 .. generic_v4 | native
+: "${_processor_opt:=generic_v3}"
+
+### -O3 instead of -O2
+: "${_cc_harder:=yes}"
+
+### Transparent hugepages: always | madvise
+: "${_hugepage:=always}"
+
+### Drop to nconfig before building, to eyeball the generated config
+: "${_makenconfig:=no}"
+
+_pkgsuffix=cachyos-bore-mba62
+pkgbase="linux-$_pkgsuffix"
+_major=6.18
+_minor=42
+pkgver=${_major}.${_minor}
+_tagrel=1
+pkgrel=1
+_srctag=cachyos-${_major}.${_minor}-${_tagrel}
+_srcname=${_srctag}
+pkgdesc='CachyOS LTS kernel with the BORE scheduler, debloated for a MacBookAir6,2'
+_kernuname="${pkgver}-${_pkgsuffix}"
+arch=('x86_64')
+url="https://github.com/Omargamal7/Cachyos-core"
+license=('GPL-2.0-only')
+options=('!strip' '!debug' '!lto')
+makedepends=(
+  bc binutils cpio gettext glibc libelf libgcc openssl
+  pahole perl python tar xxhash xz zlib zstd
+)
+
+_patchsource="https://raw.githubusercontent.com/cachyos/kernel-patches/master/${_major}"
+
+# NOTE on BORE.
+#
+# 6.18.36 reworked check_preempt_wakeup_fair(), replacing the local
+# `do_preempt_short` bool with the `preempt_wakeup_action` enum. Neither
+# copy of CachyOS's 6.18 BORE patch has caught up:
+#
+#   sched/0001-bore-cachy.patch     fails to apply (one rejected hunk)
+#   sched-dev/0001-bore-cachy.patch applies, then fails to compile
+#
+# So we take sched-dev/ and adapt it with the local fixup in patches/.
+# See docs/BUILD.md for the full story and how to retire the fixup.
+source=(
+    "https://github.com/CachyOS/linux/releases/download/${_srctag}/${_srctag}.tar.gz"{,.asc}
+    "${_patchsource}/sched-dev/0001-bore-cachy.patch"
+    "patches/0002-bore-fix-preempt-wakeup-action.patch"
+    "config"
+    "gen-config.sh"
+    "verify-config.sh"
+    "prune-drivers.sh"
+    "prune-rules.conf"
+    "critical-symbols.txt"
+    "fragments/10-strip.conf"
+    "fragments/20-mba62.conf"
+    "fragments/30-tuning.conf"
+)
+validpgpkeys=(
+  E18447AC260021D31F3FF6C4C8A2A4774B8B63C4  # Eric Naim <dnaim@cachyos.org>
+  E8B9AA39F054E30E8290D492C3C4820857F654FE  # Peter Jung <admin@ptr1337.dev>
+)
+b2sums=('e322057f183bf666741ec12d2d64f681d9ba7bc4e4326354656ca23be5ecfb5ab3ab2ef494ddb54605f4ff1d5bba5a08493760eea9a36860080eafdb369a0321'
+        'SKIP'
+        'f0aee268e0f751812d21a72eb26c323eb54f9726e9eb4bd6f6c71b0035d97cdf38e2dbfed4f6bab57d6956f86ee9aa32a50d295f631f0a9fa0ae9862fdd62138'
+        'SKIP'   # patches/0002-bore-fix-preempt-wakeup-action.patch
+        'SKIP'   # config
+        'SKIP'   # gen-config.sh
+        'SKIP'   # verify-config.sh
+        'SKIP'   # prune-drivers.sh
+        'SKIP'   # prune-rules.conf
+        'SKIP'   # critical-symbols.txt
+        'SKIP'   # fragments/10-strip.conf
+        'SKIP'   # fragments/20-mba62.conf
+        'SKIP')  # fragments/30-tuning.conf
+
+export KBUILD_BUILD_HOST=cachyos
+export KBUILD_BUILD_USER="$pkgbase"
+export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+
+_die() { error "$@"; exit 1; }
+
+prepare() {
+    cd "$_srcname"
+
+    echo "Setting version..."
+    echo "-$pkgrel" > localversion.10-pkgrel
+    echo "${pkgbase#linux}" > localversion.20-pkgname
+
+    echo "Applying BORE..."
+    patch -Np1 < "../0001-bore-cachy.patch"
+
+    # ...and adapt it to 6.18.36+, where check_preempt_wakeup_fair() lost the
+    # do_preempt_short bool the patch still assigns to. Without this the tree
+    # applies cleanly and then fails to compile.
+    echo "Applying BORE fixup for preempt_wakeup_action..."
+    patch -Np1 < "../0002-bore-fix-preempt-wakeup-action.patch"
+
+    ### Generate the debloated config.
+    #
+    # gen-config.sh layers kernel/config, the deny-list, the generated
+    # per-driver prune, the MacBookAir6,2 allowlist and the tuning fragment,
+    # runs olddefconfig, then asserts that everything in
+    # critical-symbols.txt survived. It exits non-zero if it did not, which
+    # fails the build rather than shipping a kernel that will not boot.
+    echo "Generating debloated config..."
+    chmod +x ../gen-config.sh ../verify-config.sh ../prune-drivers.sh
+    ../gen-config.sh "$PWD"
+
+    ### CPU baseline
+    case "${_processor_opt,,}" in
+        generic_v[1-4])
+            scripts/config -e GENERIC_CPU -d MZEN4 -d X86_NATIVE_CPU \
+                --set-val X86_64_VERSION "${_processor_opt: -1}";;
+        native)
+            scripts/config -d GENERIC_CPU -d MZEN4 -e X86_NATIVE_CPU;;
+        *) _die "_processor_opt='$_processor_opt' is not valid";;
+    esac
+    echo "CPU baseline: ${_processor_opt}"
+
+    ### Tick rate
+    case "$_HZ_ticks" in
+        100|250|500|600|750|1000)
+            scripts/config -d HZ_300 -e "HZ_${_HZ_ticks}" --set-val HZ "${_HZ_ticks}";;
+        300)
+            scripts/config -e HZ_300 --set-val HZ 300;;
+        *) _die "_HZ_ticks='$_HZ_ticks' is not valid";;
+    esac
+    echo "Tick rate: ${_HZ_ticks}Hz"
+
+    ### Preemption
+    case "$_preempt" in
+        full)      scripts/config -e PREEMPT_DYNAMIC -e PREEMPT -d PREEMPT_VOLUNTARY -d PREEMPT_LAZY -d PREEMPT_NONE;;
+        lazy)      scripts/config -e PREEMPT_DYNAMIC -d PREEMPT -d PREEMPT_VOLUNTARY -e PREEMPT_LAZY -d PREEMPT_NONE;;
+        voluntary) scripts/config -d PREEMPT_DYNAMIC -d PREEMPT -e PREEMPT_VOLUNTARY -d PREEMPT_LAZY -d PREEMPT_NONE;;
+        none)      scripts/config -d PREEMPT_DYNAMIC -d PREEMPT -d PREEMPT_VOLUNTARY -d PREEMPT_LAZY -e PREEMPT_NONE;;
+        *) _die "_preempt='$_preempt' is not valid";;
+    esac
+    echo "Preemption: ${_preempt}"
+
+    ### Transparent hugepages
+    case "$_hugepage" in
+        always)  scripts/config -d TRANSPARENT_HUGEPAGE_MADVISE -e TRANSPARENT_HUGEPAGE_ALWAYS;;
+        madvise) scripts/config -d TRANSPARENT_HUGEPAGE_ALWAYS -e TRANSPARENT_HUGEPAGE_MADVISE;;
+        *) _die "_hugepage='$_hugepage' is not valid";;
+    esac
+
+    ### -O3
+    if [ "$_cc_harder" = "yes" ]; then
+        scripts/config -d CC_OPTIMIZE_FOR_PERFORMANCE -e CC_OPTIMIZE_FOR_PERFORMANCE_O3
+    fi
+
+    echo "Re-resolving configuration..."
+    make olddefconfig
+    make -s kernelrelease > version
+    echo "Prepared $pkgbase version $(<version)"
+
+    ### The toggles above can only relax the config, never re-add a driver,
+    ### so re-assert the contract before spending an hour compiling.
+    ../verify-config.sh .config \
+        ../10-strip.conf ../20-mba62.conf ../30-tuning.conf
+
+    [ "$_makenconfig" = "yes" ] && make nconfig
+
+    cat .config > "${startdir}/config-${pkgver}-${pkgrel}${pkgbase#linux}"
+}
+
+build() {
+    cd "$_srcname"
+    make -j"$(nproc)" all
+}
+
+_package() {
+    pkgdesc="The $pkgdesc"
+    depends=('coreutils' 'kmod' 'initramfs')
+    optdepends=('linux-firmware: firmware images needed for some devices'
+                'broadcom-wl-dkms: Wi-Fi for the BCM4360 in this machine'
+                'facetimehd-dkms: FaceTime HD camera'
+                'mbpfan-git: fan control via applesmc')
+    provides=(WIREGUARD-MODULE)
+
+    cd "$_srcname"
+    local modulesdir="$pkgdir/usr/lib/modules/$(<version)"
+
+    echo "Installing boot image..."
+    install -Dm644 "$(make -s image_name)" "$modulesdir/vmlinuz"
+    echo "$pkgbase" | install -Dm644 /dev/stdin "$modulesdir/pkgbase"
+
+    echo "Installing modules..."
+    ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
+        DEPMOD=/doesnt/exist modules_install
+
+    rm "$modulesdir"/build
+}
+
+_package-headers() {
+    pkgdesc="Headers and scripts for building modules for the $pkgdesc"
+    depends=(binutils glibc libelf libgcc openssl pahole xxhash zlib zstd "${pkgbase}")
+    provides=(LINUX-HEADERS)
+
+    cd "$_srcname"
+    local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
+
+    echo "Installing build files..."
+    install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
+        localversion.* version vmlinux
+    install -Dt "$builddir/kernel" -m644 kernel/Makefile
+    install -Dt "$builddir/arch/x86" -m644 arch/x86/Makefile
+    cp -t "$builddir" -a scripts
+    ln -srt "$builddir" "$builddir/scripts/gdb/vmlinux-gdb.py"
+    install -Dt "$builddir/tools/objtool" tools/objtool/objtool
+
+    echo "Installing headers..."
+    cp -t "$builddir" -a include
+    cp -t "$builddir/arch/x86" -a arch/x86/include
+    install -Dt "$builddir/arch/x86/kernel" -m644 arch/x86/kernel/asm-offsets.s
+    install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
+
+    # facetimehd builds against the videobuf2 headers
+    install -Dt "$builddir/drivers/media/common/videobuf2" -m644 \
+        drivers/media/common/videobuf2/*.h 2>/dev/null || true
+
+    echo "Installing KConfig files..."
+    find . -name 'Kconfig*' -exec install -Dm644 {} "$builddir/{}" \;
+
+    echo "Installing unstripped VDSO..."
+    make INSTALL_MOD_PATH="$pkgdir/usr" vdso_install link=
+
+    echo "Removing unneeded architectures..."
+    local arch
+    for arch in "$builddir"/arch/*/; do
+        [[ $arch = */x86/ ]] && continue
+        rm -r "$arch"
+    done
+
+    rm -r "$builddir/Documentation"
+    find -L "$builddir" -type l -delete
+    find "$builddir" -type f -name '*.o' -delete
+
+    echo "Stripping build tools..."
+    local file
+    while read -rd '' file; do
+        case "$(file -Sib "$file")" in
+            application/x-sharedlib\;*)      strip $STRIP_SHARED "$file" ;;
+            application/x-archive\;*)        strip $STRIP_STATIC "$file" ;;
+            application/x-executable\;*)     strip $STRIP_BINARIES "$file" ;;
+            application/x-pie-executable\;*) strip $STRIP_SHARED "$file" ;;
+        esac
+    done < <(find "$builddir" -type f -perm -u+x ! -name vmlinux -print0)
+    strip $STRIP_STATIC "$builddir/vmlinux"
+
+    mkdir -p "$pkgdir/usr/src"
+    ln -sr "$builddir" "$pkgdir/usr/src/$pkgbase"
+}
+
+pkgname=("$pkgbase" "$pkgbase-headers")
+for _p in "${pkgname[@]}"; do
+    eval "package_$_p() {
+        $(declare -f "_package${_p#$pkgbase}" | tail -n +2)
+    }"
+done

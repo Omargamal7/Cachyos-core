@@ -1,0 +1,77 @@
+# Symbols the machine will not boot or will not be usable without.
+# verify-config.sh treats a miss here as a hard failure.
+# Format: SYMBOL<TAB or space>expected   where expected is y, m, n or y|m
+
+# Boot path: firmware -> disk -> root filesystem
+EFI                     y
+EFI_STUB                y
+ACPI                    y
+PCI                     y
+ATA                     y
+SATA_AHCI               y
+SCSI                    y
+BLK_DEV_SD              y
+BLK_DEV_NVME            y
+EXT4_FS                 y
+BTRFS_FS                y
+VFAT_FS                 y
+DEVTMPFS                y
+DEVTMPFS_MOUNT          y
+TMPFS                   y
+PROC_FS                 y
+SYSFS                   y
+
+# Console and display
+DRM                     y
+DRM_I915                y
+FRAMEBUFFER_CONSOLE     y
+
+# Input -- without these the built-in keyboard and trackpad are dead
+INPUT_EVDEV             y
+USB                     y
+USB_XHCI_HCD            y
+USB_EHCI_HCD            y
+USB_HID                 y
+HID_APPLE               y
+MOUSE_BCM5974           y
+
+# Scheduler the whole point of this build
+SCHED_BORE              y
+
+# Userspace contract: systemd, Chrome's sandbox
+CGROUPS                 y
+NAMESPACES              y
+USER_NS                 y
+NET_NS                  y
+PID_NS                  y
+SECCOMP                 y
+SECCOMP_FILTER          y
+INOTIFY_USER            y
+SIGNALFD                y
+TIMERFD                 y
+EPOLL                   y
+FHANDLE                 y
+UNIX                    y
+UNIX98_PTYS             y
+DMIID                   y
+
+# Out-of-tree modules (broadcom-wl, facetimehd) must be loadable
+MODULES                 y
+MODULE_SIG_FORCE        n
+TRIM_UNUSED_KSYMS       n
+
+# Debug info off is the largest single size saving; assert it stuck
+DEBUG_INFO              n
+
+# Wi-Fi and audio for this laptop
+CFG80211                y|m
+SND_HDA_INTEL           y|m
+SND_HDA_CODEC_CIRRUS    y|m
+SND_HDA_CODEC_CS420X    y|m
+APPLE_PROPERTIES        y
+SENSORS_APPLESMC        y|m
+BT_HCIBTUSB             y|m
+
+# facetimehd builds against the V4L2 core
+VIDEO_DEV               y|m
+VIDEOBUF2_DMA_SG        y|m

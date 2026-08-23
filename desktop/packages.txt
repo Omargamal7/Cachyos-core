@@ -1,0 +1,60 @@
+# Package list for the debloated desktop. One package per line; # comments
+# and blank lines are ignored. Groups are marked with [name] and can be
+# skipped by install.sh via --without=<name>.
+
+[xorg]
+xorg-server
+xorg-xinit
+xorg-xrandr
+xorg-xset
+# Haswell works well with xorg-server's built-in modesetting driver.
+# xf86-video-intel is the older SNA/UXA driver -- only add it if you hit
+# tearing that modesetting + a compositor cannot fix. See docs/HARDWARE.md.
+
+[wm]
+openbox
+obconf
+picom
+feh
+i3lock
+
+[panel]
+xfce4-panel
+xfce4-settings
+xfce4-power-manager
+xfce4-pulseaudio-plugin
+xfce4-notifyd
+xfconf
+
+[terminal]
+terminator
+
+[files]
+nemo
+gvfs
+gvfs-mtp
+polkit-gnome
+file-roller
+
+[audio]
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+pavucontrol
+alsa-utils
+
+[network]
+networkmanager
+network-manager-applet
+
+[fonts]
+ttf-dejavu
+noto-fonts
+noto-fonts-emoji
+
+[base]
+xdg-user-dirs
+brightnessctl
+dbus
+polkit
