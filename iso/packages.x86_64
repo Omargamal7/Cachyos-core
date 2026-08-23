@@ -47,6 +47,11 @@ network-manager-applet
 # assembled, so the live session and the installed system both have Wi-Fi with
 # nothing to compile on first boot.
 broadcom-wl-dkms
+# Take dkms from Arch rather than CachyOS. Theirs hard-depends on clang, lld
+# and llvm -- 392 MiB installed -- because CachyOS builds kernels with clang.
+# Ours is built with GCC, so that toolchain would never be used. Same version
+# (3.4.3), and broadcom-wl-dkms only asks for "dkms".
+extra/dkms
 bluez
 bluez-utils
 

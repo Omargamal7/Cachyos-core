@@ -101,7 +101,14 @@ if [[ $skip_aur == 0 ]]; then
         d="$(mktemp -d)"; chown "$build_user" "$d"
         if as_builder git clone -q --depth 1 "https://aur.archlinux.org/$pkg.git" "$d/$pkg" 2>/dev/null; then
             if ( cd "$d/$pkg" && as_builder makepkg -s --noconfirm --skippgpcheck ); then
-                cp "$d/$pkg"/*.pkg.tar.zst "$localrepo/" 2>/dev/null || true
+                # Skip the -debug split packages makepkg produces; they are
+                # only useful with a debugger and would bloat the image.
+                for built in "$d/$pkg"/*.pkg.tar.zst; do
+                    case "$(basename "$built")" in
+                        *-debug-*) continue ;;
+                        *) cp "$built" "$localrepo/" ;;
+                    esac
+                done
             else
                 echo "!! $pkg failed to build -- carrying on without it" >&2
             fi
