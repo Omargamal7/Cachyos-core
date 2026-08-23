@@ -5,10 +5,10 @@
 #
 # Layers, in order, each winning over the last:
 #   kernel/config                    CachyOS 6.18 LTS base
-#   kernel/fragments/10-strip.conf   subsystem deny-list
+#   kernel/10-strip.conf             subsystem deny-list
 #   (generated) 15-prune.conf        per-driver pruning, from prune-rules.conf
-#   kernel/fragments/20-mba62.conf   MacBookAir6,2 hardware allowlist
-#   kernel/fragments/30-tuning.conf  size / scheduler / DKMS settings
+#   kernel/20-mba62.conf             MacBookAir6,2 hardware allowlist
+#   kernel/30-tuning.conf            size / scheduler / DKMS settings
 #
 # then `make olddefconfig` resolves dependencies and verify-config.sh checks
 # that nothing we asked for was silently dropped.
@@ -21,11 +21,11 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ -f $src/Makefile && -d $src/kernel ]] || {
     echo "gen-config: $src does not look like a kernel tree" >&2; exit 2; }
 
-# Fragments live in kernel/fragments/ in the repo, but makepkg flattens
-# every local source into $srcdir, so accept either layout.
+# Fragments sit next to this script. A fragments/ subdirectory is still
+# accepted so the layout can be reorganised without breaking the build.
 _find() {
-    if   [[ -f $here/fragments/$1 ]]; then printf '%s' "$here/fragments/$1"
-    elif [[ -f $here/$1 ]];           then printf '%s' "$here/$1"
+    if   [[ -f $here/$1 ]];           then printf '%s' "$here/$1"
+    elif [[ -f $here/fragments/$1 ]]; then printf '%s' "$here/fragments/$1"
     else echo "gen-config: cannot find $1" >&2; exit 2
     fi
 }

@@ -4,8 +4,7 @@ kernel/pkg/
 kernel/*.pkg.tar.*
 kernel/*.tar.gz
 kernel/*.tar.gz.asc
-kernel/*.patch
-!kernel/patches/*.patch
+kernel/0001-bore-cachy.patch
 
 # configs saved by a build
 kernel/config-*

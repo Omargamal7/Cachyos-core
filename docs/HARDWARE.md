@@ -77,7 +77,7 @@ Because `wl` is a FullMAC driver that talks to `cfg80211` directly, this
 kernel has **`mac80211` disabled entirely**. That removes a large amount of
 code, but it also means no SoftMAC driver will work — if you ever swap in an
 Intel or Atheros card, re-enable `CONFIG_MAC80211` in
-`kernel/fragments/20-mba62.conf`.
+`kernel/20-mba62.conf`.
 
 ### Camera — FaceTime HD
 
@@ -93,7 +93,7 @@ paru -S facetimehd-dkms facetimehd-firmware
 The driver links against `videobuf2-dma-sg`, which has no Kconfig prompt of
 its own — it only ever appears via another capture driver's `select`. With
 every TV tuner and SoC ISP stripped out, nothing selected it, so
-`kernel/fragments/20-mba62.conf` enables `VIDEO_IPU3_CIO2` purely to pull
+`kernel/20-mba62.conf` enables `VIDEO_IPU3_CIO2` purely to pull
 `videobuf2-dma-sg.ko` into the build. That is why an Intel IPU3 driver is in
 the config of a 2013 laptop. If you skip the camera, both can go.
 

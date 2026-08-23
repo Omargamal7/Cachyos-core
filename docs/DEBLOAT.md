@@ -13,10 +13,10 @@ runs `make olddefconfig` and verifies the result:
 | layer | file | what it does |
 |---|---|---|
 | 1 | `kernel/config` | CachyOS's `linux-cachyos-lts` config, vendored verbatim |
-| 2 | `fragments/10-strip.conf` | turns off whole subsystems by their gate symbol |
+| 2 | `10-strip.conf` | turns off whole subsystems by their gate symbol |
 | 3 | *generated* `15-prune.conf` | per-driver pruning, from `prune-rules.conf` |
-| 4 | `fragments/20-mba62.conf` | the MacBookAir6,2 hardware allowlist |
-| 5 | `fragments/30-tuning.conf` | BORE, debug info, DKMS and compression settings |
+| 4 | `20-mba62.conf` | the MacBookAir6,2 hardware allowlist |
+| 5 | `30-tuning.conf` | BORE, debug info, DKMS and compression settings |
 
 Then:
 
@@ -74,7 +74,7 @@ modules loadable. A miss there fails the build.
 
 ## What was deliberately removed
 
-Anything below can come back by editing `kernel/fragments/10-strip.conf` (or
+Anything below can come back by editing `kernel/10-strip.conf` (or
 `prune-rules.conf`) and rebuilding.
 
 | removed | why | cost if you want it back |
@@ -112,7 +112,7 @@ Anything below can come back by editing `kernel/fragments/10-strip.conf` (or
 
 If you are adapting this to a different Mac, the files to edit in order are:
 
-1. `kernel/fragments/20-mba62.conf` — the allowlist. Everything else is
+1. `kernel/20-mba62.conf` — the allowlist. Everything else is
    subtractive; this is where hardware gets named.
 2. `kernel/critical-symbols.txt` — what must survive.
 3. `hardware/mba62/modprobe.d/` — module options and blacklists.

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Fetch the newest kernel (and friends) built for this laptop from the
+# project's GitHub releases and install them with pacman -U.
+#
+# The packages are not in any public pacman repository -- they are release
+# assets on https://github.com/Omargamal7/Cachyos-core.
+set -euo pipefail
+
+repo="Omargamal7/Cachyos-core"
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+[[ $EUID -eq 0 ]] || { echo "run me with sudo" >&2; exit 1; }
+
+echo ":: looking up the latest release of $repo"
+assets=$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" \
+    | grep -oE '"browser_download_url": *"[^"]+\.pkg\.tar\.zst"' \
+    | cut -d'"' -f4)
+
+[[ -n $assets ]] || { echo "no packages attached to the latest release" >&2; exit 1; }
+
+cd "$tmp"
+for url in $assets; do
+    echo ":: downloading $(basename "$url")"
+    curl -fsSL -O "$url"
+done
+
+echo ":: installing"
+pacman -U --noconfirm ./*.pkg.tar.zst
+echo ":: done -- reboot to use the new kernel"

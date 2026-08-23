@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install to disk
+Comment=Install CachyOS-core onto this MacBook's drive
+Exec=/usr/local/bin/install-to-disk
+Icon=system-software-install
+Terminal=false
+Categories=System;

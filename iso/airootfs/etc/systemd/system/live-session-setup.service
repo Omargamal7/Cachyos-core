@@ -1,0 +1,12 @@
+[Unit]
+Description=Create the live session user
+Before=getty@tty1.service
+ConditionPathExists=/run/archiso/bootmnt
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/live-session-setup
+
+[Install]
+WantedBy=multi-user.target

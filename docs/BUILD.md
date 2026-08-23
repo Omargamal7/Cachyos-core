@@ -76,7 +76,7 @@ kernel/sched/fair.c:9010:17: error: 'do_preempt_short' undeclared
 ```
 
 So the PKGBUILD takes `sched-dev` and applies
-`patches/0002-bore-fix-preempt-wakeup-action.patch` on top. That patch moves
+`0002-bore-fix-preempt-wakeup-action.patch` on top. That patch moves
 BORE's slice-protection bypass next to the in-tree `PREEMPT_SHORT` check —
 which the BORE block's own comment calls its companion — and gives it the
 same treatment that path now uses:
@@ -100,7 +100,7 @@ patch on top of a patch. At that point:
 
 1. Check whether `sched/0001-bore-cachy.patch` applies again — if it does,
    switch `_patchsource` back to `sched/` in the PKGBUILD.
-2. Delete `patches/0002-bore-fix-preempt-wakeup-action.patch` from `source=()`
+2. Delete `0002-bore-fix-preempt-wakeup-action.patch` from `source=()`
    and from `prepare()`.
 3. Update the patch's `b2sum`.
 
@@ -131,7 +131,7 @@ refreshed base does not silently re-enable anything — but do re-read the
 
 ```sh
 kernel/gen-config.sh /path/to/linux-source /tmp/out.config
-VERBOSE=1 kernel/verify-config.sh /tmp/out.config kernel/fragments/*.conf
+VERBOSE=1 kernel/verify-config.sh /tmp/out.config kernel/*.conf
 ```
 
 It exits non-zero if any symbol in `critical-symbols.txt` is missing, so it

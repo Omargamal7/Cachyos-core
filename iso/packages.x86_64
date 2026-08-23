@@ -1,0 +1,101 @@
+# Packages for the live image. Because Calamares installs in offline mode --
+# its unpackfs module copies this filesystem onto the disk -- this list is
+# also exactly what the installed system gets. Keep it honest.
+
+## base system
+base
+base-devel
+intel-ucode
+# Only the Broadcom blobs are needed: Haswell graphics load no firmware, and
+# the Bluetooth is a BCM20702. The full linux-firmware is ~1 GB of hardware
+# this laptop does not have.
+linux-firmware-broadcom
+mkinitcpio
+sudo
+nano
+vim
+git
+wget
+curl
+man-db
+pacman-contrib
+usbutils
+pciutils
+lsof
+htop
+
+## our kernel
+linux-cachyos-bore-mba62
+linux-cachyos-bore-mba62-headers
+
+## boot + installer
+grub
+efibootmgr
+dosfstools
+mtools
+os-prober
+cachyos-calamares-qt6-grub
+
+## live-session-only (harmless once installed)
+mkinitcpio-archiso
+squashfs-tools
+
+## network
+networkmanager
+network-manager-applet
+# Wi-Fi for the BCM4360. DKMS builds it against our kernel while the image is
+# assembled, so the live session and the installed system both have Wi-Fi with
+# nothing to compile on first boot.
+broadcom-wl-dkms
+bluez
+bluez-utils
+
+## xorg
+xorg-server
+xorg-xinit
+xorg-xrandr
+xorg-xrdb
+xorg-xset
+
+## window manager and session
+openbox
+picom
+feh
+i3lock
+
+## panel and settings
+xfce4-panel
+xfce4-settings
+xfce4-power-manager
+xfce4-pulseaudio-plugin
+xfce4-notifyd
+xfce4-screenshooter
+xfconf
+
+## terminal
+terminator
+
+## files
+nemo
+gvfs
+gvfs-mtp
+polkit-gnome
+file-roller
+
+## audio
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+pavucontrol
+alsa-utils
+
+## fonts
+ttf-dejavu
+noto-fonts
+noto-fonts-emoji
+
+## odds and ends
+xdg-user-dirs
+brightnessctl
+lm_sensors

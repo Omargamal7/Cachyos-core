@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Launch the installer. Calamares needs root; liveuser has passwordless sudo
+# on the live image only.
+exec sudo -E XDG_CURRENT_DESKTOP=XFCE calamares "$@"

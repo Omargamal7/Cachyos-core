@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Creates the live user on first boot. Kept as a unit rather than baked into
+# the image so the account never ends up on the installed system: Calamares'
+# removeuser module deletes it, and this only runs from the ISO.
+set -euo pipefail
+
+if ! id liveuser >/dev/null 2>&1; then
+    useradd -m -G wheel,video,audio,storage,network -s /bin/bash liveuser
+    passwd -d liveuser
+fi
+
+# Dotfiles come from /etc/skel, which the ISO build fills from desktop/skel.
+install -d -o liveuser -g liveuser /home/liveuser

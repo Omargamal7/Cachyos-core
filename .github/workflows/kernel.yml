@@ -1,0 +1,93 @@
+# Build the kernel packages and attach them to a GitHub release.
+#
+# This is the slow half (an hour or two) and the half that rarely changes, so
+# it is separate from the ISO build: rebuilding the ISO does not mean
+# recompiling the kernel.
+name: Kernel packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'kernel-*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build linux-cachyos-bore-mba62
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+      options: --privileged
+    steps:
+      - name: Free up disk space
+        run: |
+          # The runner image ships several GB of toolchains we do not need,
+          # and a kernel build tree is large.
+          rm -rf /__t/CodeQL /__t/Java_Temurin-Hotspot_jdk /__t/PyPy /__t/Ruby || true
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - name: Add the CachyOS repository
+        run: |
+          pacman-key --init
+          # The keyring package carries the signing key, which is more
+          # reliable than reaching a keyserver from a CI runner.
+          curl -fsSL -o /tmp/cachyos-keyring.pkg.tar.zst \
+            "$(curl -fsSL https://mirror.cachyos.org/repo/x86_64/cachyos/ \
+               | grep -oE 'cachyos-keyring-[0-9][^"]*\.pkg\.tar\.zst' | grep -v sig | head -1 \
+               | sed 's|^|https://mirror.cachyos.org/repo/x86_64/cachyos/|')"
+          pacman -U --noconfirm /tmp/cachyos-keyring.pkg.tar.zst
+          pacman-key --populate cachyos
+          sed -i '/^\[core\]$/i [cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
+          pacman -Syu --noconfirm
+
+      - name: Install build dependencies
+        run: pacman -S --noconfirm --needed bc pahole cpio perl tar xz zlib zstd xxhash libelf openssl gettext python git
+
+      - name: Create build user
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          chmod -R a+rw .
+
+      - name: Build the packages
+        run: |
+          cd kernel
+          # --skippgpcheck: CachyOS's source-signing keys are not in
+          # cachyos-keyring and keyservers are unreliable from CI. The tarball
+          # is still verified against the b2sum pinned in the PKGBUILD.
+          sudo -H -u builder makepkg -s --noconfirm --skippgpcheck --nocheck
+
+      - name: Show what was built
+        run: ls -lh kernel/*.pkg.tar.zst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kernel-packages
+          path: kernel/*.pkg.tar.zst
+          retention-days: 14
+
+      - name: Publish to the kernel-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: kernel-latest
+          name: Kernel packages (linux-cachyos-bore-mba62)
+          body: |
+            Prebuilt `linux-cachyos-bore-mba62` packages, so the MacBook Air
+            never has to compile a kernel.
+
+            Install them with:
+
+                sudo pacman -U ./linux-cachyos-bore-mba62-*.pkg.tar.zst
+
+            or, on a system already installed from the ISO, just:
+
+                sudo mba62-update
+
+            Built from `kernel/` in this repository. See `docs/BUILD.md`.
+          files: kernel/*.pkg.tar.zst
+          fail_on_unmatched_files: true

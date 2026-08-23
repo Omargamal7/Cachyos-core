@@ -1,0 +1,120 @@
+# Build the live/install ISO and attach it to a GitHub release.
+#
+# Takes the kernel packages from the kernel-latest release rather than
+# rebuilding them, so this run is minutes rather than hours. Run the
+# "Kernel packages" workflow first if that release does not exist yet.
+name: ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_aur:
+        description: 'Skip the AUR builds (Chrome, mbpfan, obconf)'
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'iso-*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build the MacBookAir6,2 ISO
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+      options: --privileged
+    steps:
+      - name: Free up disk space
+        run: |
+          rm -rf /__t/CodeQL /__t/Java_Temurin-Hotspot_jdk /__t/PyPy /__t/Ruby || true
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - name: Add the CachyOS repository
+        run: |
+          pacman-key --init
+          curl -fsSL -o /tmp/cachyos-keyring.pkg.tar.zst \
+            "$(curl -fsSL https://mirror.cachyos.org/repo/x86_64/cachyos/ \
+               | grep -oE 'cachyos-keyring-[0-9][^"]*\.pkg\.tar\.zst' | grep -v sig | head -1 \
+               | sed 's|^|https://mirror.cachyos.org/repo/x86_64/cachyos/|')"
+          pacman -U --noconfirm /tmp/cachyos-keyring.pkg.tar.zst
+          pacman-key --populate cachyos
+          sed -i '/^\[core\]$/i [cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
+          pacman -Syu --noconfirm
+
+      - name: Install ISO tooling
+        run: |
+          pacman -S --noconfirm --needed archiso mkinitcpio-archiso squashfs-tools \
+            libisoburn dosfstools erofs-utils grub edk2-shell git jq
+
+      - name: Fetch the prebuilt kernel packages
+        run: |
+          mkdir -p prebuilt-kernel
+          urls=$(curl -fsSL \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/kernel-latest" \
+            | jq -r '.assets[].browser_download_url | select(endswith(".pkg.tar.zst"))')
+          if [ -z "$urls" ]; then
+            echo "::error::No kernel packages found. Run the 'Kernel packages' workflow first."
+            exit 1
+          fi
+          for u in $urls; do
+            echo "downloading $(basename "$u")"
+            curl -fsSL -H "Authorization: Bearer ${{ github.token }}" \
+                 -H "Accept: application/octet-stream" -O "$u"
+          done
+          mv ./*.pkg.tar.zst prebuilt-kernel/
+          ls -lh prebuilt-kernel/
+
+      - name: Create build user
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          chmod -R a+rw .
+
+      - name: Build the ISO
+        run: |
+          args="--kernel-dir=$PWD/prebuilt-kernel"
+          if [ "${{ inputs.skip_aur }}" = "true" ]; then args="$args --skip-aur"; fi
+          SUDO_USER=builder ./iso/build.sh $args
+
+      - name: Checksum
+        run: |
+          cd out
+          sha256sum ./*.iso | tee SHA256SUMS
+          ls -lh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mba62-iso
+          path: out/*
+          retention-days: 14
+
+      - name: Publish to the iso-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: iso-latest
+          name: Live/install ISO for MacBookAir6,2
+          body: |
+            Bootable live image with the GUI installer.
+
+            **Write it to a USB stick** (replace `sdX` with your stick, and
+            note this erases it):
+
+                sudo dd if=cachyos-core-mba62-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+
+            **Boot it**: plug the stick into the MacBook Air, power on holding
+            the Option key, and pick the orange EFI Boot entry.
+
+            The installer starts by itself. It installs exactly what you are
+            running from the stick, so no network is needed.
+
+            Verify the download against `SHA256SUMS`.
+          files: |
+            out/*.iso
+            out/SHA256SUMS
+          fail_on_unmatched_files: true

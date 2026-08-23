@@ -59,21 +59,25 @@ _patchsource="https://raw.githubusercontent.com/cachyos/kernel-patches/master/${
 #   sched/0001-bore-cachy.patch     fails to apply (one rejected hunk)
 #   sched-dev/0001-bore-cachy.patch applies, then fails to compile
 #
-# So we take sched-dev/ and adapt it with the local fixup in patches/.
+# So we take sched-dev/ and adapt it with the local fixup shipped alongside this PKGBUILD.
 # See docs/BUILD.md for the full story and how to retire the fixup.
+#
+# Every local source sits next to this PKGBUILD rather than in subdirectories:
+# makepkg resolves local sources by basename, so a "fragments/x.conf" entry is
+# looked up as "x.conf" and never found.
 source=(
     "https://github.com/CachyOS/linux/releases/download/${_srctag}/${_srctag}.tar.gz"{,.asc}
     "${_patchsource}/sched-dev/0001-bore-cachy.patch"
-    "patches/0002-bore-fix-preempt-wakeup-action.patch"
+    "0002-bore-fix-preempt-wakeup-action.patch"
     "config"
     "gen-config.sh"
     "verify-config.sh"
     "prune-drivers.sh"
     "prune-rules.conf"
     "critical-symbols.txt"
-    "fragments/10-strip.conf"
-    "fragments/20-mba62.conf"
-    "fragments/30-tuning.conf"
+    "10-strip.conf"
+    "20-mba62.conf"
+    "30-tuning.conf"
 )
 validpgpkeys=(
   E18447AC260021D31F3FF6C4C8A2A4774B8B63C4  # Eric Naim <dnaim@cachyos.org>
@@ -82,16 +86,16 @@ validpgpkeys=(
 b2sums=('e322057f183bf666741ec12d2d64f681d9ba7bc4e4326354656ca23be5ecfb5ab3ab2ef494ddb54605f4ff1d5bba5a08493760eea9a36860080eafdb369a0321'
         'SKIP'
         'f0aee268e0f751812d21a72eb26c323eb54f9726e9eb4bd6f6c71b0035d97cdf38e2dbfed4f6bab57d6956f86ee9aa32a50d295f631f0a9fa0ae9862fdd62138'
-        'SKIP'   # patches/0002-bore-fix-preempt-wakeup-action.patch
+        'SKIP'   # 0002-bore-fix-preempt-wakeup-action.patch
         'SKIP'   # config
         'SKIP'   # gen-config.sh
         'SKIP'   # verify-config.sh
         'SKIP'   # prune-drivers.sh
         'SKIP'   # prune-rules.conf
         'SKIP'   # critical-symbols.txt
-        'SKIP'   # fragments/10-strip.conf
-        'SKIP'   # fragments/20-mba62.conf
-        'SKIP')  # fragments/30-tuning.conf
+        'SKIP'   # 10-strip.conf
+        'SKIP'   # 20-mba62.conf
+        'SKIP')  # 30-tuning.conf
 
 export KBUILD_BUILD_HOST=cachyos
 export KBUILD_BUILD_USER="$pkgbase"

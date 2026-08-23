@@ -28,30 +28,38 @@ on an initramfs.
 
 ```
 kernel/     the kernel package: PKGBUILD, base config, debloat pipeline
+iso/        archiso profile + build script for the live/install image
 desktop/    package list, dotfiles and installer for the Openbox session
 hardware/   MacBookAir6,2 drivers, module options and quirks
-docs/       BUILD.md, HARDWARE.md, DEBLOAT.md
+docs/       INSTALL.md, BUILD.md, HARDWARE.md, DEBLOAT.md
 ```
 
-## Quick start
+## Installing
 
-On the target machine, running CachyOS:
+**Download the ISO, write it to a USB stick, hold Option at power-on.** The
+image boots to the desktop and starts a graphical installer that copies the
+running system to disk — same kernel, same desktop, same drivers, no network
+needed. [docs/INSTALL.md](docs/INSTALL.md) has the details, including the
+`dd` incantations for Linux, macOS and Windows.
+
+Get it from the [releases page](https://github.com/Omargamal7/Cachyos-core/releases/tag/iso-latest),
+or build one: Actions → **ISO** → Run workflow.
+
+The MacBook Air never compiles anything. The kernel is built in CI and
+published as a package; `sudo mba62-update` pulls the latest.
+
+### Or, on a system you already have
+
+If you would rather keep an existing CachyOS install and just add these
+pieces:
 
 ```sh
 git clone https://github.com/Omargamal7/Cachyos-core
 cd Cachyos-core
-
-# 1. Build and install the kernel (takes a while on a 2013 dual-core)
-cd kernel && makepkg -si && cd ..
-
-# 2. The desktop
+sudo pacman -U ./linux-cachyos-bore-mba62-*.pkg.tar.zst   # from the releases page
 sudo desktop/install.sh --user="$USER"
-
-# 3. The drivers that are not in the kernel tree
 sudo hardware/mba62/install.sh
 ```
-
-Then reboot into the new kernel and run `startx`.
 
 Both installers take `--dry-run`, which prints every command they would run
 and changes nothing. Use it first.
@@ -61,7 +69,7 @@ and changes nothing. Use it first.
 **Upstream's 6.18 BORE patch is broken, and this repo carries a fix.**
 Linux 6.18.36 reworked `check_preempt_wakeup_fair()`, and neither copy of
 CachyOS's BORE patch has caught up: `sched/` no longer applies, and
-`sched-dev/` applies but fails to compile. `kernel/patches/` contains a
+`sched-dev/` applies but fails to compile. `kernel/` contains a
 13-line adaptation. [docs/BUILD.md](docs/BUILD.md) explains it and how to
 retire it once upstream refreshes.
 
@@ -79,6 +87,11 @@ extracted from macOS) and fan control (`mbpfan`).
 **Some things were deliberately removed** — KVM, Xen, bpftrace's BTF,
 mac80211, XFS, NFS, all non-Intel GPUs. If you need one back,
 [docs/DEBLOAT.md](docs/DEBLOAT.md) says which fragment to edit.
+
+**Wi-Fi works on the installed system without a network.** `broadcom-wl` is
+built against this kernel while the ISO is assembled, which matters on a
+laptop with no ethernet port: a first boot that cannot reach the internet to
+fetch its own network driver is a dead end.
 
 ## Credits
 
