@@ -26,7 +26,8 @@ jobs:
         run: |
           # The runner image ships several GB of toolchains we do not need,
           # and a kernel build tree is large.
-          rm -rf /__t/CodeQL /__t/Java_Temurin-Hotspot_jdk /__t/PyPy /__t/Ruby || true
+          rm -rf /__t/CodeQL /__t/Java_Temurin-Hotspot_jdk /__t/PyPy /__t/Ruby \
+                 /__t/go /__t/node /__t/Python || true
           df -h /
 
       - uses: actions/checkout@v4

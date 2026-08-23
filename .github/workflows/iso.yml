@@ -29,7 +29,12 @@ jobs:
     steps:
       - name: Free up disk space
         run: |
-          rm -rf /__t/CodeQL /__t/Java_Temurin-Hotspot_jdk /__t/PyPy /__t/Ruby || true
+          # The image needs roughly 8 GB: a 4 GB root filesystem, the ~950 MB
+          # squashfs, the 1.2 GB ISO and the package cache in between. The
+          # runner's tool cache is the only large thing visible from inside
+          # the container.
+          rm -rf /__t/CodeQL /__t/Java_Temurin-Hotspot_jdk /__t/PyPy /__t/Ruby \
+                 /__t/go /__t/node /__t/Python || true
           df -h /
 
       - uses: actions/checkout@v4
@@ -52,22 +57,31 @@ jobs:
             libisoburn dosfstools erofs-utils grub edk2-shell git jq
 
       - name: Fetch the prebuilt kernel packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           mkdir -p prebuilt-kernel
-          urls=$(curl -fsSL \
-            -H "Authorization: Bearer ${{ github.token }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/kernel-latest" \
-            | jq -r '.assets[].browser_download_url | select(endswith(".pkg.tar.zst"))')
-          if [ -z "$urls" ]; then
-            echo "::error::No kernel packages found. Run the 'Kernel packages' workflow first."
+          # Download through each asset's API url with
+          # "Accept: application/octet-stream", not its browser_download_url.
+          # The latter redirects to the release-assets CDN, which rejects a
+          # request still carrying GitHub's Authorization header -- a failure
+          # that depends on redirect handling rather than anything in the repo.
+          assets=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/releases/tags/kernel-latest" \
+            | jq -r '.assets[] | select(.name | endswith(".pkg.tar.zst")) | "\(.url) \(.name)"')
+          if [ -z "$assets" ]; then
+            echo "::error::No kernel packages on the kernel-latest release. Run the 'Kernel packages' workflow first."
             exit 1
           fi
-          for u in $urls; do
-            echo "downloading $(basename "$u")"
-            curl -fsSL -H "Authorization: Bearer ${{ github.token }}" \
-                 -H "Accept: application/octet-stream" -O "$u"
-          done
-          mv ./*.pkg.tar.zst prebuilt-kernel/
+          while read -r url name; do
+            echo "downloading $name"
+            curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+                 -H "Accept: application/octet-stream" \
+                 -o "prebuilt-kernel/$name" "$url"
+          done <<< "$assets"
           ls -lh prebuilt-kernel/
 
       - name: Create build user
@@ -87,6 +101,10 @@ jobs:
           cd out
           sha256sum ./*.iso | tee SHA256SUMS
           ls -lh
+
+      - name: Disk usage after the build
+        if: always()
+        run: df -h /
 
       - uses: actions/upload-artifact@v4
         with:
