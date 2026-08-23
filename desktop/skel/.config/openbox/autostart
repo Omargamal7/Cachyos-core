@@ -1,6 +1,18 @@
 # Openbox autostart -- everything a session needs when there is no
 # xfce4-session or GNOME session to do it for us.
 
+# Open the installer, but only when running from the USB stick.
+# /run/archiso/bootmnt exists only in the live environment, so this is a
+# no-op once installed -- which matters, because the installer copies this
+# filesystem verbatim onto the disk.
+#
+# It lives here rather than in /etc/xdg/openbox/autostart because that path
+# belongs to the openbox package: shipping a file there gets it renamed to
+# .pacnew (or would conflict outright, were it not in openbox's backup list).
+if [ -d /run/archiso/bootmnt ] && [ -x /usr/local/bin/install-to-disk ]; then
+    /usr/local/bin/install-to-disk &
+fi
+
 # XSettings: fonts, themes, cursors, and Xft settings for GTK apps.
 # xfce4-panel and Nemo both read from it.
 xfsettingsd &

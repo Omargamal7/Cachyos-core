@@ -146,8 +146,17 @@ if [[ -n ${browser_cmd:-} && $browser_cmd != google-chrome-stable ]]; then
 fi
 
 # ----------------------------------------------------------------- services --
+# Enabling a service must never abort the run: the unit may not be installed
+# (--without=network), and `systemctl enable` always fails inside a chroot or
+# container. Neither is a reason to stop before telling the user what to do
+# next.
 echo ":: enabling services"
-run systemctl enable NetworkManager.service
+if [[ -e /usr/lib/systemd/system/NetworkManager.service ]]; then
+    run systemctl enable NetworkManager.service \
+        || echo "!! could not enable NetworkManager -- run 'systemctl enable NetworkManager' yourself"
+else
+    echo "   NetworkManager is not installed -- skipping"
+fi
 # PipeWire needs nothing enabled here: its packages ship the user units
 # already wanted by default.target, and it is socket-activated on first use.
 
