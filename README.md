@@ -45,6 +45,12 @@ needed. [docs/INSTALL.md](docs/INSTALL.md) has the details, including the
 Get it from the [releases page](https://github.com/Omargamal7/Cachyos-core/releases/tag/iso-latest),
 or build one: Actions → **ISO** → Run workflow.
 
+The profile has been built end to end and comes out at **1.2 GB**, carrying
+the debloated kernel, Chrome, and — compiled against that kernel while the
+image is assembled — the `wl` Wi-Fi module and the `facetimehd` camera
+driver with its firmware. `EFI/BOOT/BOOTx64.EFI` is present, which is the
+path Apple's Startup Manager actually looks at.
+
 The MacBook Air never compiles anything. The kernel is built in CI and
 published as a package; `sudo mba62-update` pulls the latest.
 

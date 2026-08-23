@@ -39,7 +39,7 @@ done
 [[ $EUID -eq 0 ]] || { echo "run me as root" >&2; exit 1; }
 
 missing=()
-for tool in mkarchiso repo-add mksquashfs xorriso; do
+for tool in mkarchiso repo-add mksquashfs xorriso bsdtar; do
     command -v "$tool" >/dev/null || missing+=("$tool")
 done
 # git is only needed for the AUR builds, so it is a hard requirement unless
@@ -173,8 +173,11 @@ mkarchiso -v -w "$work" -o "$outdir" "$profile"
 # laptop with no Wi-Fi and no obvious reason why. Check the assembled tree
 # before it is thrown away.
 airootfs="$work/x86_64/airootfs"
+iso_file="$(ls -1t "$outdir"/*.iso | head -1)"
 echo ":: verifying the image"
 fail=0
+
+# Contents of the live filesystem.
 check() {
     local desc="$1" path="$2"
     if compgen -G "$airootfs$path" >/dev/null; then
@@ -185,13 +188,36 @@ check() {
     fi
 }
 
-check "our kernel image"          "/boot/vmlinuz-linux-cachyos-bore-mba62"
-check "live initramfs"            "/boot/initramfs-linux-cachyos-bore-mba62.img"
+# Contents of the finished ISO. The boot files are checked here rather than in
+# the airootfs because mkarchiso copies them onto the ISO and then empties
+# ${airootfs}/boot entirely -- looking for them in the live filesystem finds
+# nothing and says the image is broken when it is fine.
+iso_listing="$(bsdtar -tf "$iso_file" 2>/dev/null)"
+check_iso() {
+    local desc="$1" pattern="$2"
+    if grep -qE "$pattern" <<<"$iso_listing"; then
+        printf '   ok    %s\n' "$desc"
+    else
+        printf '   MISS  %s (%s)\n' "$desc" "$pattern"
+        fail=$((fail+1))
+    fi
+}
+
+check_iso "kernel image on the ISO"  "^arch/boot/x86_64/vmlinuz-linux-cachyos-bore-mba62$"
+check_iso "live initramfs on the ISO" "^arch/boot/x86_64/initramfs-linux-cachyos-bore-mba62\\.img$"
+check_iso "squashfs"                 "^arch/x86_64/airootfs\\.sfs$"
+check_iso "GRUB config"              "^boot/grub/grub\\.cfg$"
+# Apple's firmware generally only lists a loader from the Startup Manager when
+# it is at this path, so an ISO without it will not appear in the boot picker.
+check_iso "EFI fallback loader"      "^EFI/BOOT/BOOTx64\\.EFI$"
+
 check "kernel modules"            "/usr/lib/modules/*-cachyos-bore-mba62/kernel"
 check "BCM4360 Wi-Fi module"      "/usr/lib/modules/*-cachyos-bore-mba62/updates/dkms/wl.ko*"
 check "Cirrus audio codec"        "/usr/lib/modules/*-cachyos-bore-mba62/kernel/sound/hda/codecs/cirrus/snd-hda-codec-cs420x.ko*"
 check "Calamares binary"          "/usr/bin/calamares"
 check "our Calamares settings"    "/etc/calamares/settings.conf"
+check "unpackfs override"         "/etc/calamares/modules/unpackfs-mba62.conf"
+check "bootloader override"       "/etc/calamares/modules/bootloader-mba62.conf"
 check "installer launcher"        "/usr/local/bin/install-to-disk"
 check "Openbox"                   "/usr/bin/openbox"
 check "xfce4-panel"               "/usr/bin/xfce4-panel"
@@ -199,6 +225,12 @@ check "Terminator"                "/usr/bin/terminator"
 check "Nemo"                      "/usr/bin/nemo"
 check "desktop dotfiles in skel"  "/etc/skel/.config/openbox/autostart"
 check "hardware quirks"           "/etc/modprobe.d/10-mba62-input.conf"
+
+if compgen -G "$airootfs/usr/lib/modules/"*"/updates/dkms/facetimehd.ko"* >/dev/null; then
+    echo "   ok    FaceTime HD camera module"
+else
+    echo "   note  no camera module (AUR build skipped or failed)"
+fi
 
 if compgen -G "$airootfs/opt/google/chrome/chrome" >/dev/null; then
     echo "   ok    Google Chrome"
