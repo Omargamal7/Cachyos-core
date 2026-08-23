@@ -109,6 +109,7 @@ while IFS= read -r -d '' src; do
     rel="${src#"$here/skel/"}"
     mode=644
     [[ $rel == .xinitrc ]] && mode=755
+    [[ $rel == .bash_profile ]] && mode=644
     [[ $rel == .config/openbox/autostart ]] && mode=755
     # keybindings.xml is merged into rc.xml below, not installed as-is
     [[ $rel == .config/openbox/keybindings.xml ]] && continue
@@ -152,7 +153,9 @@ run systemctl enable NetworkManager.service
 
 cat <<'DONE'
 
-Done. Log in on a TTY and run `startx`.
+Done. Log out and log back in on the console -- .bash_profile starts X on
+tty1 by itself, so there is nothing to type. (`startx` still works if you
+prefer to launch it by hand.)
 
 If you want a display manager instead, `pacman -S ly && systemctl enable ly`
 is the smallest sensible option; nothing here depends on one.

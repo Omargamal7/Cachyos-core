@@ -11,13 +11,13 @@ nothing more.
 
 | | stock CachyOS 6.18 LTS | this config |
 |---|---|---|
-| modules built | 6233 | **489** |
-| built-in symbols | 3204 | 1880 |
+| modules built | 6233 | **484** |
+| built-in symbols | 3204 | 1875 |
 | debug info | DWARF5 + BTF | none |
 | Rust | on | off |
 
 This config has been built end to end against `cachyos-6.18.42-1` with the
-BORE patch applied: `bzImage` 13 MB, 519 `.ko` files (~46 MB unstripped),
+BORE patch applied: `bzImage` 13 MB, ~500 `.ko` files (~46 MB unstripped),
 229 drivers linked into the image. BORE is confirmed present in the result
 (`effective_prio_bore`, `update_curr_bore` and the `sched_burst_*` sysctls
 are all in `System.map`), and the trackpad, keyboard, i915, AHCI and NVMe

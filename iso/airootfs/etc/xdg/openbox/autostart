@@ -1,0 +1,10 @@
+# System-wide Openbox autostart. Openbox runs this *in addition to*
+# ~/.config/openbox/autostart, which is where the desktop's own startup lives.
+#
+# This file exists for one thing: opening the installer when we are running
+# from the USB stick. /run/archiso/bootmnt only exists in the live
+# environment, so once the system is installed this becomes a no-op -- which
+# matters, because the installer copies this filesystem verbatim onto the disk.
+if [ -d /run/archiso/bootmnt ]; then
+    /usr/local/bin/install-to-disk &
+fi

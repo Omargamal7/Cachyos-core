@@ -1,7 +1,7 @@
 # How the debloat works
 
 The stock CachyOS 6.18 LTS config builds **6233 modules**. This one builds
-**489**. Nothing here is hand-edited into a 12,000-line `.config` — the config
+**484**. Nothing here is hand-edited into a 12,000-line `.config` — the config
 is generated on every build and checked afterwards, so it cannot silently rot
 when the base config is refreshed.
 

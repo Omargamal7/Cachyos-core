@@ -107,37 +107,39 @@ for pkg in google-chrome mbpfan obconf; do
     fi
 done
 
-# --------------------------------------------------------------- dotfiles ---
+# --------------------------------------------------- assemble the profile ---
+# Everything below writes into a copy, never into iso/ itself: a build should
+# not leave generated files in the working tree.
+work="$(mktemp -d -p /var/tmp mkarchiso.XXXXXX)"
+profile="$(mktemp -d -p /var/tmp profile.XXXXXX)"
+trap 'rm -rf "$work" "$profile" "$pkglist"' EXIT
+
+cp -r "$here/." "$profile/"
+cp "$pkglist" "$profile/packages.x86_64"
+
 # The desktop configuration is the same one desktop/install.sh lays down; the
 # ISO bakes it into /etc/skel so the live user and every account created by
 # the installer start with it.
 echo ":: copying desktop dotfiles into /etc/skel"
-skel="$here/airootfs/etc/skel"
+skel="$profile/airootfs/etc/skel"
 mkdir -p "$skel"
 cp -r "$root/desktop/skel/." "$skel/"
-# keybindings.xml is merged into rc.xml at install time, not shipped as-is
+# keybindings.xml is merged into rc.xml at first login, not shipped as-is
 rm -f "$skel/.config/openbox/keybindings.xml"
 
 # The hardware configuration belongs on the image too -- it is the same set of
 # files hardware/mba62/install.sh would write.
 echo ":: copying MacBookAir6,2 hardware configuration"
-install -Dm644 "$root"/hardware/mba62/modprobe.d/*.conf -t "$here/airootfs/etc/modprobe.d/"
-install -Dm644 "$root"/hardware/mba62/X11/xorg.conf.d/*.conf -t "$here/airootfs/etc/X11/xorg.conf.d/"
-install -Dm644 "$root"/hardware/mba62/udev/rules.d/*.rules -t "$here/airootfs/etc/udev/rules.d/"
-install -Dm644 "$root/hardware/mba62/mbpfan.conf" "$here/airootfs/etc/mbpfan.conf"
+install -Dm644 "$root"/hardware/mba62/modprobe.d/*.conf -t "$profile/airootfs/etc/modprobe.d/"
+install -Dm644 "$root"/hardware/mba62/X11/xorg.conf.d/*.conf -t "$profile/airootfs/etc/X11/xorg.conf.d/"
+install -Dm644 "$root"/hardware/mba62/udev/rules.d/*.rules -t "$profile/airootfs/etc/udev/rules.d/"
+install -Dm644 "$root/hardware/mba62/mbpfan.conf" "$profile/airootfs/etc/mbpfan.conf"
 
 # --------------------------------------------------------------- mkarchiso --
-work="$(mktemp -d -p /var/tmp mkarchiso.XXXXXX)"
-trap 'rm -rf "$work" "$pkglist"' EXIT
-
-profile="$(mktemp -d -p /var/tmp profile.XXXXXX)"
-cp -r "$here/." "$profile/"
-cp "$pkglist" "$profile/packages.x86_64"
 
 mkdir -p "$outdir"
 echo ":: mkarchiso"
 mkarchiso -v -w "$work" -o "$outdir" "$profile"
-rm -rf "$profile"
 
 # ----------------------------------------------------------------- verify ---
 # mkarchiso exits 0 even when something we care about quietly did not happen --
