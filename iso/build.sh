@@ -37,8 +37,23 @@ for arg in "$@"; do
 done
 
 [[ $EUID -eq 0 ]] || { echo "run me as root" >&2; exit 1; }
-command -v mkarchiso >/dev/null || { echo "archiso is not installed" >&2; exit 1; }
-command -v repo-add  >/dev/null || { echo "pacman's repo-add is missing" >&2; exit 1; }
+
+missing=()
+for tool in mkarchiso repo-add mksquashfs xorriso; do
+    command -v "$tool" >/dev/null || missing+=("$tool")
+done
+# git is only needed for the AUR builds, so it is a hard requirement unless
+# those are being skipped. Without this check a missing git shows up much
+# later as "could not clone", which points at the network rather than the
+# actual cause.
+if [[ $skip_aur == 0 ]]; then
+    command -v git >/dev/null || missing+=(git)
+fi
+if (( ${#missing[@]} )); then
+    echo "missing required tool(s): ${missing[*]}" >&2
+    echo "on Arch: pacman -S archiso squashfs-tools libisoburn git" >&2
+    exit 1
+fi
 
 # makepkg refuses to run as root, so everything that builds runs as this user.
 build_user="${SUDO_USER:-}"
