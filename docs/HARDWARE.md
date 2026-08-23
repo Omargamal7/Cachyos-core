@@ -116,6 +116,27 @@ ls /sys/class/backlight/intel_backlight              # panel backlight
 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver   # intel_pstate
 ```
 
+## CPU microcode
+
+There is no `intel-ucode.img` on the ISO and none in `/boot` on the installed
+system, which looks like an omission and is not one.
+
+`intel-ucode` ships two things: the precompiled `/boot/intel-ucode.img`, and
+158 individual microcode files under `/usr/lib/firmware/intel-ucode/`.
+mkinitcpio's `microcode` hook prefers the individual files and only falls back
+to the precompiled image "as a last resort", so it embeds the right microcode
+directly into the initramfs. Seeing that hook in the config, archiso sets
+`need_external_ucodes=0` and copies no separate image onto the ISO.
+
+archiso then empties `/boot` before building the squashfs, which is why the
+installed system has no image there either -- but `/usr/lib/firmware/` survives,
+Arch's default `HOOKS` includes `microcode`, and Calamares regenerates the
+initramfs during install. Confirm it on the running machine with:
+
+```sh
+journalctl -k | grep -i microcode
+```
+
 ## dm-crypt and LUKS
 
 `CONFIG_DM_CRYPT` is a module, not built in — the kernel caps it at `=m`

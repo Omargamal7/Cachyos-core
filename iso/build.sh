@@ -225,6 +225,12 @@ check "Terminator"                "/usr/bin/terminator"
 check "Nemo"                      "/usr/bin/nemo"
 check "desktop dotfiles in skel"  "/etc/skel/.config/openbox/autostart"
 check "hardware quirks"           "/etc/modprobe.d/10-mba62-input.conf"
+# There is deliberately no intel-ucode.img on the ISO. mkinitcpio's microcode
+# hook embeds the microcode into the initramfs from the individual firmware
+# files, so archiso sets need_external_ucodes=0 and copies no image. Those
+# firmware files are what must survive -- archiso empties /boot, and the
+# installed system regenerates its initramfs from these.
+check "CPU microcode firmware"    "/usr/lib/firmware/intel-ucode"
 
 if compgen -G "$airootfs/usr/lib/modules/"*"/updates/dkms/facetimehd.ko"* >/dev/null; then
     echo "   ok    FaceTime HD camera module"

@@ -7,7 +7,12 @@ power-on, click through the installer.
 
 Download the newest `cachyos-core-mba62-*.iso` from the
 [releases page](https://github.com/Omargamal7/Cachyos-core/releases/tag/iso-latest),
-along with `SHA256SUMS`.
+along with `SHA256SUMS`. The current build is 1.04 GiB:
+
+```sh
+curl -LO https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/cachyos-core-mba62-2026.08.23-x86_64.iso
+curl -LO https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/SHA256SUMS
+```
 
 Check it before you write it:
 

@@ -42,17 +42,21 @@ running system to disk — same kernel, same desktop, same drivers, no network
 needed. [docs/INSTALL.md](docs/INSTALL.md) has the details, including the
 `dd` incantations for Linux, macOS and Windows.
 
-Get it from the [releases page](https://github.com/Omargamal7/Cachyos-core/releases/tag/iso-latest),
-or build one: Actions → **ISO** → Run workflow.
+**[⬇ cachyos-core-mba62-2026.08.23-x86_64.iso](https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/cachyos-core-mba62-2026.08.23-x86_64.iso)**
+· 1.04 GiB · [SHA256SUMS](https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/SHA256SUMS)
+· `c811fa14392086ea1496aae84e3630008d8f072f17b59b8d4558684c40fed6e2`
 
-The profile has been built end to end and comes out at **1.2 GB**, carrying
-the debloated kernel, Chrome, and — compiled against that kernel while the
-image is assembled — the `wl` Wi-Fi module and the `facetimehd` camera
-driver with its firmware. `EFI/BOOT/BOOTx64.EFI` is present, which is the
-path Apple's Startup Manager actually looks at.
+It carries the debloated kernel, Chrome, and — compiled against that kernel
+while the image is assembled — the `wl` Wi-Fi module and the `facetimehd`
+camera driver with its firmware. `EFI/BOOT/BOOTx64.EFI` is present, which is
+the path Apple's Startup Manager actually looks at.
+
+To rebuild: Actions → **ISO** → Run workflow.
 
 The MacBook Air never compiles anything. The kernel is built in CI and
-published as a package; `sudo mba62-update` pulls the latest.
+published as a [package](https://github.com/Omargamal7/Cachyos-core/releases/tag/kernel-latest)
+(27 MiB, vs ~130 MiB for stock `linux-cachyos`); `sudo mba62-update` pulls
+the latest.
 
 ### Or, on a system you already have
 
