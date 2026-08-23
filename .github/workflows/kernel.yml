@@ -46,7 +46,16 @@ jobs:
           pacman -Syu --noconfirm
 
       - name: Install build dependencies
-        run: pacman -S --noconfirm --needed bc pahole cpio perl tar xz zlib zstd xxhash libelf openssl gettext python git
+        # Only the two the base-devel image lacks. The rest of the PKGBUILD's
+        # makedepends are left to `makepkg -s`, which resolves them with
+        # `pacman -T` and so honours "provides".
+        #
+        # Listing them explicitly is what broke the first run: enabling the
+        # CachyOS repo swaps zlib for zlib-ng-compat, which provides, replaces
+        # and conflicts with zlib. `pacman -S zlib` asks for that exact package
+        # and hits an unresolvable conflict, while `makepkg -s` sees the
+        # dependency already satisfied and does nothing.
+        run: pacman -S --noconfirm --needed bc pahole
 
       - name: Create build user
         run: |
