@@ -1,15 +1,6 @@
 # Package list for the debloated desktop. One package per line; # comments
 # and blank lines are ignored. Groups are marked with [name] and can be
 # skipped by install.sh via --without=<name>.
-#
-# To compare memory usage, try:
-#   sudo desktop/install.sh --user=$USER --desktop=sway --audio=alsa --network=iwd --without=xorg
-# vs
-#   sudo desktop/install.sh --user=$USER --desktop=openbox --audio=pipewire --network=networkmanager
-
-# ============================================================================
-# X11 Desktop (Xorg + Openbox, ~350+ MB loaded)
-# ============================================================================
 
 [xorg]
 xorg-server
@@ -39,81 +30,21 @@ xfce4-pulseaudio-plugin
 xfce4-notifyd
 xfconf
 
-# ============================================================================
-# Wayland Desktop (sway, ~250+ MB loaded)
-# Disable xorg, panel, wm groups and enable wayland instead
-# ============================================================================
-
-[wayland]
-sway
-wayland
-wl-clipboard
-xwayland
-
-[waybar]
-waybar
-# Lightweight status bar for Wayland; drops xfce4-panel + xfce4-settings
-# Configured via ~/.config/waybar/config.jsonc
-
-[wayland-brightness]
-brightnessctl
-# Direct hardware brightness control; no xfce4-power-manager needed
-
-# ============================================================================
-# Terminal (same for both)
-# ============================================================================
-
 [terminal]
 terminator
 
-# ============================================================================
-# File Manager: choose one or none
-# ============================================================================
+[extras]
+# Bound to Print in the Openbox key bindings.
+xfce4-screenshooter
 
 [files]
-# Default: Nemo file manager (GTK, ~80-100 MB with gvfs)
 nemo
 gvfs
 gvfs-mtp
 polkit-gnome
 file-roller
 
-[files-lightweight]
-# Alternative: lf (terminal file manager, ~3 MB, runs in terminator)
-lf
-# No additional dependencies; configure in ~/.config/lf/lfrc
-
-[files-minimal]
-# Alternative: ranger (Python-based, ~10 MB with deps)
-# ranger
-# Uncomment above and skip both nemo and lf if you prefer ranger
-
-# ============================================================================
-# Browser: choose one or use --browser flag
-# ============================================================================
-
-[browser]
-# Default: Chrome/Chromium (300+ MB resident with tabs open)
-# Override with --browser=chromium, --browser=firefox, or --browser=none
-# See desktop/install.sh for available options
-
-[browser-lightweight]
-# Alternative: w3m (text/HTML rendering, ~5 MB, terminal-based)
-w3m
-# Use: w3m https://example.com
-# Lightweight and fast; no images but works for most text-based pages
-
-[browser-minimal]
-# Alternative: Falkon (Qt-based, ~60 MB resident)
-# Install manually: sudo pacman -S falkon
-# Or use: pacman -S firefox (with heavy config tuning to ~120 MB)
-
-# ============================================================================
-# Audio Stack: choose one
-# ============================================================================
-
-[audio-default]
-# PipeWire (modern, Bluetooth support, ~50-80 MB footprint with wireplumber)
+[audio]
 pipewire
 pipewire-pulse
 pipewire-alsa
@@ -121,54 +52,17 @@ wireplumber
 pavucontrol
 alsa-utils
 
-[audio-lightweight]
-# ALSA only (minimal, ~5 MB, no daemon, manual volume with alsamixer)
-alsa-utils
-# Use: alsamixer to adjust volume
-# Or: amixer set Master 5%+ (in Openbox/sway keybindings)
-
-# ============================================================================
-# Network Stack: choose one
-# ============================================================================
-
-[network-default]
-# NetworkManager (graphical, ~60-80 MB with applet, supports hotplug)
+[network]
 networkmanager
 network-manager-applet
-
-[network-lightweight]
-# iwd (Intel Wireless Daemon, ~5 MB, minimal, no GUI)
-iwd
-# Use: iwctl station wlan0 connect SSID
-# Manual DHCP: sudo dhclient wlan0
-
-# ============================================================================
-# System Fonts (same for both)
-# ============================================================================
 
 [fonts]
 ttf-dejavu
 noto-fonts
 noto-fonts-emoji
 
-# ============================================================================
-# Base System (required for both)
-# ============================================================================
-
 [base]
 xdg-user-dirs
 brightnessctl
 dbus
 polkit
-
-# ============================================================================
-# Screenshot Tool (X11 only; Wayland: use grim + slurp)
-# ============================================================================
-
-[screenshots-x11]
-xfce4-screenshooter
-
-[screenshots-wayland]
-# For sway: grim + slurp
-grim
-slurp
