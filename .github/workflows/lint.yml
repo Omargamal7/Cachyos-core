@@ -1,0 +1,44 @@
+# The cheap gate. Syntax, schemas, and what the installer actually does when
+# you run it.
+#
+# The kernel and ISO builds take an hour or more, so they cannot be the thing
+# standing between a bad change and the default branch. This finishes in well
+# under a minute, needs no Arch container, and is the check that would have
+# caught the last round of breakage: an installer that put every dotfile under
+# $HOME/<repo path>, a lost exec bit, renamed package groups that voided
+# --without=, and a kernel fragment value with a trailing comment that kconfig
+# rejects outright.
+#
+# It runs on pushes as well as pull requests on purpose. That breakage arrived
+# as a direct push to a branch, with no pull request to review.
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Syntax, schemas and installer behaviour
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the check tools
+        run: |
+          sudo apt-get update -qq
+          # shellcheck and python3-yaml are usually already on the image;
+          # asking for them costs a second and removes the dependency on that.
+          sudo apt-get install -y -qq shellcheck libxml2-utils python3-yaml
+
+      - name: Lint
+        # The dotfile checks create a scratch user and run the installer for
+        # real, so the script needs root. It uses no git commands, so there is
+        # no ownership dance to do first.
+        run: sudo bash scripts/lint.sh

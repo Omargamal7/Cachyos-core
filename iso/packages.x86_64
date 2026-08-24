@@ -5,6 +5,8 @@
 ## base system
 base
 base-devel
+# 4 GB machine with no swap partition; see hardware/mba62/systemd/zram-generator.conf
+zram-generator
 intel-ucode
 # Only the Broadcom blobs are needed: Haswell graphics load no firmware, and
 # the Bluetooth is a BCM20702. The full linux-firmware is ~1 GB of hardware
