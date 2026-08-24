@@ -154,6 +154,23 @@ while IFS= read -r -d '' src; do
     install_file "$src" "$rel" "$mode"
 done < <(find "$here/skel" -type f -print0)
 
+# Record which session was chosen. Without this, .bash_profile has to guess
+# from whichever config files happen to exist -- and re-running to switch
+# sessions leaves the previous one's config in place, so the guess keeps
+# picking the old session while this script reports the new one.
+#
+# Stale config directories are deliberately left alone: they are the user's
+# files, they make switching back free, and with the marker they are inert.
+echo ":: recording $desktop as the session to start on tty1"
+marker="$home_dir/.config/mba62-session"
+if [[ $dry_run == 1 ]]; then
+    echo "  would write: $marker ($desktop)"
+else
+    install -d -o "$target_user" -g "$target_user" "$home_dir/.config"
+    printf '%s\n' "$desktop" > "$marker"
+    chown "$target_user:$target_user" "$marker"
+fi
+
 # --------------------------------------------------------------- openbox rc --
 # Start from the distro's rc.xml so the schema always matches the installed
 # Openbox, then merge in only our bindings.

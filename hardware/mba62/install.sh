@@ -109,6 +109,18 @@ fi
 echo ":: zram swap"
 run pacman -S --needed --noconfirm zram-generator
 
+# The tmpfiles rule installed below turns zswap off at every boot; do it now
+# too so this run does not leave the machine double-compressing until then.
+if [[ -w /sys/module/zswap/parameters/enabled ]]; then
+    echo ":: disabling zswap (zram is already compressed)"
+    if [[ $dry_run == 1 ]]; then
+        echo "  would write: N > /sys/module/zswap/parameters/enabled"
+    else
+        echo N > /sys/module/zswap/parameters/enabled \
+            || echo "!! could not disable zswap now; the tmpfiles rule will at next boot"
+    fi
+fi
+
 # ------------------------------------------------------------- config files --
 echo ":: installing module options and quirks"
 for f in "$here"/modprobe.d/*.conf; do
@@ -122,6 +134,9 @@ for f in "$here"/udev/rules.d/*.rules; do
 done
 for f in "$here"/sysctl.d/*.conf; do
     run install -Dm644 "$f" "/etc/sysctl.d/$(basename "$f")"
+done
+for f in "$here"/tmpfiles.d/*.conf; do
+    run install -Dm644 "$f" "/etc/tmpfiles.d/$(basename "$f")"
 done
 run install -Dm644 "$here/systemd/zram-generator.conf" /etc/systemd/zram-generator.conf
 
@@ -144,6 +159,7 @@ Done. Reboot, then check:
   zramctl                                               2 GB zram swap present
   swapon --show                                         zram0 in use
   cat /proc/pressure/memory                             reclaim stall time
+  cat /sys/module/zswap/parameters/enabled              N (zram needs no zswap)
 
 If Wi-Fi is missing, `dmesg | grep -i wl` usually says why -- most often
 the DKMS module failed to build against a kernel whose headers are not

@@ -38,6 +38,11 @@ then Chrome dies" failure mode.
 - `zswap.enabled=0` on the kernel command line, because zswap in front of zram
   compresses every page twice. `mm/Kconfig` names this parameter as the
   documented way to override `ZSWAP_DEFAULT_ON`.
+- `hardware/mba62/tmpfiles.d/99-mba62-zswap.conf` reaches the same result on an
+  existing CachyOS install, where the kernel command line belongs to that
+  system and is not ours to rewrite. `CONFIG_ZSWAP` is built in and the
+  parameter is writable at runtime (`module_param_cb`, mode 0644, `mm/zswap.c`),
+  so a tmpfiles `w` rule turns it off at every boot.
 
 Verify after boot: `zramctl`, `swapon --show`, `cat /proc/pressure/memory`.
 
@@ -126,6 +131,16 @@ that changed is X11 vs Wayland.
 sway is wired up too, as the tiling option. It is a different way to work, not
 just a different protocol -- worth trying on its own merits, but it is not the
 experiment that answers "is Wayland lighter here".
+
+### Switching between them
+
+`desktop/install.sh` writes the session it installed to
+`~/.config/mba62-session`, and `.bash_profile` starts whatever that file names.
+The marker is what makes switching work: re-running the installer leaves the
+previous session's config directory in place, so deciding from config files
+alone would keep starting the old session while the installer reported the new
+one. Old config directories are left alone on purpose -- they are your files,
+they make switching back free, and the marker makes them inert.
 
 ### Adding another one
 

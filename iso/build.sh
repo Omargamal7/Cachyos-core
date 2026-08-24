@@ -161,6 +161,7 @@ install -Dm644 "$root"/hardware/mba62/X11/xorg.conf.d/*.conf -t "$profile/airoot
 install -Dm644 "$root"/hardware/mba62/udev/rules.d/*.rules -t "$profile/airootfs/etc/udev/rules.d/"
 install -Dm644 "$root/hardware/mba62/mbpfan.conf" "$profile/airootfs/etc/mbpfan.conf"
 install -Dm644 "$root"/hardware/mba62/sysctl.d/*.conf -t "$profile/airootfs/etc/sysctl.d/"
+install -Dm644 "$root"/hardware/mba62/tmpfiles.d/*.conf -t "$profile/airootfs/etc/tmpfiles.d/"
 # Single file rather than a drop-in directory: zram-generator reads
 # /etc/systemd/zram-generator.conf itself.
 install -Dm644 "$root/hardware/mba62/systemd/zram-generator.conf" \
@@ -234,6 +235,7 @@ check "hardware quirks"           "/etc/modprobe.d/10-mba62-input.conf"
 # to be on the image -- not just in hardware/mba62/install.sh.
 check "zram configuration"        "/etc/systemd/zram-generator.conf"
 check "memory sysctls"            "/etc/sysctl.d/99-mba62-memory.conf"
+check "zswap off rule"            "/etc/tmpfiles.d/99-mba62-zswap.conf"
 check "zram-generator"            "/usr/lib/systemd/system-generators/zram-generator"
 # There is deliberately no intel-ucode.img on the ISO. mkinitcpio's microcode
 # hook embeds the microcode into the initramfs from the individual firmware
