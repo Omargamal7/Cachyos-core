@@ -1,0 +1,130 @@
+# Sway session for the MacBookAir6,2 -- the Wayland counterpart to
+# .config/openbox/keybindings.xml and .config/openbox/autostart.
+#
+# Installed by `desktop/install.sh --desktop=sway`. Every binding below is the
+# same key running the same command as the Openbox session, so the two are
+# worth comparing: if one feels better than the other, it is the session doing
+# it and not a different set of applications.
+#
+# The key next to space is Super (Mod4) under the default hid_apple layout, so
+# $mod is Command -- the same key the W- bindings use under Openbox.
+set $mod Mod4
+
+# Validate this file before logging out with it:  sway --validate
+
+font pango:DejaVu Sans 10
+
+### applications ------------------------------------------------------------
+bindsym $mod+Return exec terminator
+bindsym $mod+e exec nemo
+bindsym $mod+b exec google-chrome-stable
+# swaylock stands in for i3lock; same colour as the Openbox binding.
+bindsym $mod+l exec swaylock -c 1d2021
+
+### windows -----------------------------------------------------------------
+bindsym $mod+q kill
+bindsym $mod+f fullscreen toggle
+bindsym $mod+space floating toggle
+
+# Openbox stacks windows and sway tiles them, so these have no counterpart in
+# keybindings.xml -- without them a tiling session cannot be driven at all.
+bindsym $mod+Left focus left
+bindsym $mod+Right focus right
+bindsym $mod+Up focus up
+bindsym $mod+Down focus down
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Right move right
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Down move down
+
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Log out of sway?' -B 'Log out' 'swaymsg exit'
+
+### Apple function row ------------------------------------------------------
+# hid_apple fnmode=1 (hardware/mba62/modprobe.d/10-mba62-input.conf) makes
+# these arrive as media keys without holding Fn. Same commands as Openbox.
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86KbdBrightnessUp exec brightnessctl -d smc::kbd_backlight set +10%
+bindsym XF86KbdBrightnessDown exec brightnessctl -d smc::kbd_backlight set 10%-
+bindsym XF86AudioRaiseVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ -l 1.0
+bindsym XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+bindsym XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+
+# xfce4-screenshooter is X11-only. grim with no arguments writes a timestamped
+# file to XDG_PICTURES_DIR, which xdg-user-dirs-update creates on first login.
+bindsym Print exec grim
+bindsym Shift+Print exec grim -g "$(slurp)"
+
+### trackpad ----------------------------------------------------------------
+# The same settings hardware/mba62/X11/xorg.conf.d/30-touchpad.conf gives the
+# X11 session. Both go to libinput in the end; only the syntax differs.
+input "type:touchpad" {
+    tap enabled
+    drag enabled
+    natural_scroll enabled
+    scroll_method two_finger
+    click_method clickfinger
+    dwt enabled
+    accel_profile adaptive
+}
+
+### display -----------------------------------------------------------------
+# Left at scale 1, which is what the X11 session does -- keeping the two
+# comparable matters more here than either being ideal. The panel is 2560x1600
+# at 13.3", so if everything is too small, `output * scale 2` (or 1.5) is the
+# knob; neither has been evaluated on the hardware.
+output * bg #1d2021 solid_color
+
+# Wallpaper: replace the line above with
+#   output * bg ~/.config/sway/wallpaper.jpg fill
+
+### bar ---------------------------------------------------------------------
+bar {
+    position top
+    # Battery and clock. The interval is 20s rather than 1s on purpose: a
+    # status command that wakes every second keeps the CPU out of its deeper
+    # idle states all day for a clock that shows minutes.
+    status_command while true; do printf '%s%%  %s\n' "$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1)" "$(date '+%a %d %b  %H:%M')"; sleep 20; done
+    # nm-applet lives here, the way it lives in xfce4-panel under X11.
+    tray_output *
+    colors {
+        background #1d2021
+        statusline #d5c4a1
+        inactive_workspace #1d2021 #1d2021 #928374
+        active_workspace #1d2021 #458588 #1d2021
+        focused_workspace #1d2021 #458588 #1d2021
+    }
+}
+
+### session -----------------------------------------------------------------
+# The live installer, guarded exactly as in the Openbox autostart:
+# /run/archiso/bootmnt exists only on the USB stick, so this is a no-op once
+# installed -- and the installer copies this filesystem verbatim to disk.
+exec sh -c 'if [ -d /run/archiso/bootmnt ] && [ -x /usr/local/bin/install-to-disk ]; then /usr/local/bin/install-to-disk; fi'
+
+# Notifications. xfce4-notifyd belongs to the xfce4-panel group the Wayland
+# session does not install, so mako takes its place.
+exec mako
+
+# Network applet, in the bar's tray.
+exec nm-applet --indicator
+
+# PolicyKit agent -- without one, Nemo cannot mount internal partitions and
+# anything asking for authentication fails silently.
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+
+# Standard user directories (Desktop, Downloads, ...) on first login.
+exec xdg-user-dirs-update
+
+# No compositor line: sway is one. No xfsettingsd, no xfce4-power-manager --
+# logind handles the lid, and the brightness keys are bound above.

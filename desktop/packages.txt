@@ -1,6 +1,11 @@
 # Package list for the debloated desktop. One package per line; # comments
 # and blank lines are ignored. Groups are marked with [name] and can be
 # skipped by install.sh via --without=<name>.
+#
+# Some groups belong to one session only: [xorg], [wm], [panel] and [extras]
+# are installed for --desktop=openbox; [wayland] plus [labwc] or [sway] for
+# the Wayland sessions. Everything else is installed whichever you pick.
+# install.sh holds that table.
 
 [xorg]
 xorg-server
@@ -29,6 +34,35 @@ xfce4-power-manager
 xfce4-pulseaudio-plugin
 xfce4-notifyd
 xfconf
+
+# Wayland sessions. [wayland] is shared; exactly one of [labwc] or [sway] is
+# installed beside it, chosen by --desktop. Together they replace [xorg],
+# [wm], [panel] and [extras].
+[wayland]
+wl-clipboard
+# Chrome and anything else without a native Wayland backend.
+xorg-xwayland
+# Notifications, in place of xfce4-notifyd from the [panel] group.
+mako
+# The lock screen the Command+L binding calls, standing in for i3lock.
+swaylock
+# Screenshots, in place of xfce4-screenshooter from [extras].
+grim
+slurp
+
+# labwc: stacking, and Openbox-shaped down to the rc.xml/menu.xml/autostart
+# file names. The closest thing to the X11 session, which is what makes an
+# X11-vs-Wayland comparison mean anything.
+[labwc]
+labwc
+# labwc has no panel or wallpaper of its own, unlike sway.
+waybar
+swaybg
+
+# sway: tiling. A different window-management model, not just a different
+# protocol -- worth trying, but it is not a like-for-like comparison.
+[sway]
+sway
 
 [terminal]
 terminator

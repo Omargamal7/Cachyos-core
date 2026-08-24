@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!--
+  labwc session for the MacBookAir6,2: the Wayland counterpart to
+  .config/openbox/keybindings.xml.
+
+  labwc is deliberately Openbox-shaped. Same rc.xml/menu.xml/autostart file
+  names, same `W-` key syntax, same stacking window model. That is the point:
+  comparing Openbox-on-X11 against a tiling compositor would change the
+  protocol and the whole window-management model at once, and you could not
+  tell which of the two you were feeling. Here only the protocol changes.
+
+  Validate before logging out with it:  labwc -C ~/.config/labwc
+
+  Two bindings differ from the Openbox set, because their programs are X11
+  only: i3lock becomes swaylock, and xfce4-screenshooter becomes grim.
+  Everything else is the same command on the same key.
+-->
+<labwc_config>
+
+  <theme>
+    <font place="ActiveWindow">
+      <name>DejaVu Sans</name>
+      <size>10</size>
+    </font>
+  </theme>
+
+  <keyboard>
+    <!-- labwc's own defaults (A-Tab window switching, snapping, and so on),
+         then this machine's bindings on top. -->
+    <default />
+
+    <keybind key="W-Return">
+      <action name="Execute" command="terminator" />
+    </keybind>
+    <keybind key="W-e">
+      <action name="Execute" command="nemo" />
+    </keybind>
+    <keybind key="W-b">
+      <action name="Execute" command="google-chrome-stable" />
+    </keybind>
+    <keybind key="W-l">
+      <action name="Execute" command="swaylock -c 1d2021" />
+    </keybind>
+    <keybind key="W-q">
+      <action name="Close" />
+    </keybind>
+    <keybind key="W-f">
+      <action name="ToggleFullscreen" />
+    </keybind>
+
+    <!-- Apple function row. hid_apple fnmode=1 (see
+         hardware/mba62/modprobe.d/10-mba62-input.conf) delivers these as media
+         keys without holding Fn. Identical commands to the Openbox session. -->
+    <keybind key="XF86MonBrightnessUp">
+      <action name="Execute" command="brightnessctl set +5%" />
+    </keybind>
+    <keybind key="XF86MonBrightnessDown">
+      <action name="Execute" command="brightnessctl set 5%-" />
+    </keybind>
+    <keybind key="XF86KbdBrightnessUp">
+      <action name="Execute" command="brightnessctl -d smc::kbd_backlight set +10%" />
+    </keybind>
+    <keybind key="XF86KbdBrightnessDown">
+      <action name="Execute" command="brightnessctl -d smc::kbd_backlight set 10%-" />
+    </keybind>
+    <keybind key="XF86AudioRaiseVolume">
+      <action name="Execute" command="wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ -l 1.0" />
+    </keybind>
+    <keybind key="XF86AudioLowerVolume">
+      <action name="Execute" command="wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-" />
+    </keybind>
+    <keybind key="XF86AudioMute">
+      <action name="Execute" command="wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle" />
+    </keybind>
+
+    <!-- grim with no arguments writes a timestamped file into XDG_PICTURES_DIR,
+         which xdg-user-dirs-update creates on first login. -->
+    <keybind key="Print">
+      <action name="Execute" command="grim" />
+    </keybind>
+    <keybind key="S-Print">
+      <action name="Execute" command="sh -c 'grim -g &quot;$(slurp)&quot;'" />
+    </keybind>
+  </keyboard>
+
+  <!-- The same trackpad behaviour hardware/mba62/X11/xorg.conf.d/30-touchpad.conf
+       gives the X11 session; both end up at libinput. clickfinger matches this
+       hardware: one finger left, two right, three middle. -->
+  <libinput>
+    <device category="touchpad">
+      <naturalScroll>yes</naturalScroll>
+      <tap>yes</tap>
+      <tapAndDrag>yes</tapAndDrag>
+      <disableWhileTyping>yes</disableWhileTyping>
+      <clickMethod>clickfinger</clickMethod>
+      <accelProfile>adaptive</accelProfile>
+    </device>
+  </libinput>
+
+</labwc_config>

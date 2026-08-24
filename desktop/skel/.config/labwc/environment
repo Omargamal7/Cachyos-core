@@ -1,0 +1,11 @@
+# Read by labwc at session start. Plain name=value lines, not shell.
+
+# Portals and toolkits key off this.
+XDG_CURRENT_DESKTOP=labwc
+
+# Same theme the Openbox session sets.
+GTK_THEME=Adwaita:dark
+
+# Chrome picks its password store from this; without it Chrome tries to talk
+# to gnome-keyring or kwallet and stalls on first launch.
+CHROME_PASSWORD_STORE=basic

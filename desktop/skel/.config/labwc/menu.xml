@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root menu for the labwc session, mirroring .config/openbox/menu.xml.
+
+  The Settings submenu is shorter than the Openbox one on purpose: the
+  xfce4-settings tools belong to the [panel] package group, which the Wayland
+  session does not install, and the X11 ones (display, mouse) would not manage
+  a Wayland session anyway. Display and input settings live in
+  ~/.config/labwc/rc.xml here.
+-->
+<openbox_menu>
+
+<menu id="root-menu" label="labwc">
+  <item label="Install to disk">
+    <action name="Execute" command="/usr/local/bin/install-to-disk" />
+  </item>
+  <separator />
+  <item label="Terminator">
+    <action name="Execute" command="terminator" />
+  </item>
+  <item label="Files">
+    <action name="Execute" command="nemo" />
+  </item>
+  <item label="Chrome">
+    <action name="Execute" command="google-chrome-stable" />
+  </item>
+  <separator />
+  <menu id="settings-menu" label="Settings">
+    <item label="Sound">
+      <action name="Execute" command="pavucontrol" />
+    </item>
+  </menu>
+  <separator />
+  <item label="Reconfigure labwc">
+    <action name="Reconfigure" />
+  </item>
+  <separator />
+  <item label="Lock Screen">
+    <action name="Execute" command="swaylock -c 1d2021" />
+  </item>
+  <item label="Log Out">
+    <action name="Exit" />
+  </item>
+  <item label="Suspend">
+    <action name="Execute" command="systemctl suspend" />
+  </item>
+  <item label="Reboot">
+    <action name="Execute" command="systemctl reboot" />
+  </item>
+  <item label="Shut Down">
+    <action name="Execute" command="systemctl poweroff" />
+  </item>
+</menu>
+
+</openbox_menu>
