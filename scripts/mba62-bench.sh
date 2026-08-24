@@ -144,7 +144,8 @@ mem_available() { awk '/^MemAvailable/ {print $2}' /proc/meminfo; }
 swap_used() { awk '/^SwapTotal/ {t=$2} /^SwapFree/ {f=$2} END {print t-f}' /proc/meminfo; }
 
 sample() {
-    local report="$outdir/${label}-$(date +%Y%m%d%H%M%S).txt"
+    local report
+    report="$outdir/${label}-$(date +%Y%m%d%H%M%S).txt"
     mkdir -p "$outdir"
 
     if [[ ! -r "$psi_dir/memory" ]]; then
