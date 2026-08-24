@@ -101,6 +101,14 @@ if [[ $do_fan == 1 ]]; then
     fi
 fi
 
+# ------------------------------------------------------------------ memory --
+# 4 GB, no swap partition, and Chrome. Without a swap device the kernel can
+# only reclaim page cache under pressure, and zswap -- which the CachyOS base
+# config turns on by default -- has nothing to sit in front of. See
+# systemd/zram-generator.conf.
+echo ":: zram swap"
+run pacman -S --needed --noconfirm zram-generator
+
 # ------------------------------------------------------------- config files --
 echo ":: installing module options and quirks"
 for f in "$here"/modprobe.d/*.conf; do
@@ -112,6 +120,10 @@ done
 for f in "$here"/udev/rules.d/*.rules; do
     run install -Dm644 "$f" "/etc/udev/rules.d/$(basename "$f")"
 done
+for f in "$here"/sysctl.d/*.conf; do
+    run install -Dm644 "$f" "/etc/sysctl.d/$(basename "$f")"
+done
+run install -Dm644 "$here/systemd/zram-generator.conf" /etc/systemd/zram-generator.conf
 
 echo ":: rebuilding the initramfs so the new module options take effect"
 if have mkinitcpio; then
@@ -129,6 +141,9 @@ Done. Reboot, then check:
   sensors                                               SMC temperatures
   wpctl status                                          audio sink present
   ls /sys/class/leds/smc::kbd_backlight                 keyboard backlight
+  zramctl                                               2 GB zram swap present
+  swapon --show                                         zram0 in use
+  cat /proc/pressure/memory                             reclaim stall time
 
 If Wi-Fi is missing, `dmesg | grep -i wl` usually says why -- most often
 the DKMS module failed to build against a kernel whose headers are not
