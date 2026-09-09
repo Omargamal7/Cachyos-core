@@ -113,6 +113,14 @@ for f in "$here"/udev/rules.d/*.rules; do
     run install -Dm644 "$f" "/etc/udev/rules.d/$(basename "$f")"
 done
 
+# Energy/performance bias. This is a service rather than a udev rule or a
+# sysctl because intel_epb attaches the attribute from a late_initcall with
+# sysfs_merge_group(), which emits no uevent -- see bin/mba62-epb.
+echo ":: energy/performance bias"
+run install -Dm755 "$here/bin/mba62-epb" /usr/local/bin/mba62-epb
+run install -Dm644 "$here/systemd/mba62-epb.service" /etc/systemd/system/mba62-epb.service
+run systemctl enable mba62-epb.service
+
 echo ":: rebuilding the initramfs so the new module options take effect"
 if have mkinitcpio; then
     run mkinitcpio -P
@@ -129,6 +137,7 @@ Done. Reboot, then check:
   sensors                                               SMC temperatures
   wpctl status                                          audio sink present
   ls /sys/class/leds/smc::kbd_backlight                 keyboard backlight
+  cat /sys/devices/system/cpu/cpu0/power/energy_perf_bias   says balance-power
 
 If Wi-Fi is missing, `dmesg | grep -i wl` usually says why -- most often
 the DKMS module failed to build against a kernel whose headers are not

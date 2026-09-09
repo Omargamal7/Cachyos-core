@@ -160,3 +160,67 @@ Haswell and newer. `xf86-video-intel` (the older SNA/UXA driver) is still
 around and occasionally smoother on Ivy Bridge and older, but it is
 unmaintained. If you install it, **delete that file** — the two drivers fight
 over the device and X will fail to start.
+
+## Power tuning
+
+### Energy/performance bias
+
+`mba62-epb.service` writes `balance-power` to
+`/sys/devices/system/cpu/cpu*/power/energy_perf_bias` at boot. EPB is a 0–15
+hint in `MSR_IA32_ENERGY_PERF_BIAS` that biases the package power management
+between performance and energy; Haswell-ULT boots at `normal` (the
+`EPB_INDEX_NORMAL` override table in `arch/x86/kernel/cpu/intel_epb.c` only
+covers Alder Lake-L, Gracemont and Raptor Lake-P, so this machine keeps the
+stock default).
+
+Three details are easy to get wrong here, so they are worth writing down:
+
+- **The names use hyphens.** `energy_perf_strings[]` in `intel_epb.c` is
+  `performance`, `balance-performance`, `normal`, `balance-power`, `power`.
+  `balance_power` with an underscore is not a synonym — the write is rejected
+  with `EINVAL`. (A bare number 0–15 also works.)
+- **It has to be a service, not a udev rule.** `intel_epb_init()` is a
+  `late_initcall`, and it attaches the attribute from the CPU-online hotplug
+  callback with `sysfs_merge_group()`, which emits no uevent. There is no
+  `add` event carrying `power/energy_perf_bias` for a rule to match.
+- **It does not need reapplying after resume.** `intel_epb` registers syscore
+  ops (`.suspend = intel_epb_save`, `.resume = intel_epb_restore`), and the
+  same save/restore pair runs on CPU offline/online, so the value survives
+  suspend, hibernate and hotplug.
+
+Check it with:
+
+```sh
+systemctl status mba62-epb
+cat /sys/devices/system/cpu/cpu0/power/energy_perf_bias
+```
+
+If the CPU does not expose EPB the unit's `ConditionPathExists` skips it, and
+the helper exits 0 rather than failing the boot.
+
+### i915 parameters that no longer exist
+
+Guides for this machine still circulate a `/etc/modprobe.d/i915.conf` along
+these lines:
+
+```
+options i915 enable_rc6=1 enable_fbc=1 enable_guc=0 fastboot=1
+```
+
+Do not copy it. Three separate things are wrong with it:
+
+- **`i915` is built into this kernel** (`CONFIG_DRM_I915=y`, see
+  `kernel/20-mba62.conf`), so a `modprobe.d` file for it is never consulted at
+  all. Parameters for a built-in driver have to go on the kernel command line
+  as `i915.<param>=<value>`.
+- **`enable_rc6` and `fastboot` are not parameters any more.** Neither name
+  appears in `i915_params.c` or in the display parameter list in
+  `display/intel_display_params.h`. RC6 has been unconditionally on since
+  4.16. Passing an unknown parameter to a *module* makes `modprobe` fail
+  outright, which for a modular i915 build would mean no graphics.
+- **`enable_fbc` still exists but defaults to `-1`**, which lets the driver
+  decide per platform. Forcing it to `1` overrides that judgement and is a
+  known source of display artefacts; it is deliberately left alone here.
+
+`enable_guc` does still exist, but Haswell has no GuC — the parameter is inert
+on this machine.
