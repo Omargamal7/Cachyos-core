@@ -42,9 +42,9 @@ running system to disk — same kernel, same desktop, same drivers, no network
 needed. [docs/INSTALL.md](docs/INSTALL.md) has the details, including the
 `dd` incantations for Linux, macOS and Windows.
 
-**[⬇ cachyos-core-mba62-2026.08.23-x86_64.iso](https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/cachyos-core-mba62-2026.08.23-x86_64.iso)**
-· 1.04 GiB · [SHA256SUMS](https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/SHA256SUMS)
-· `c811fa14392086ea1496aae84e3630008d8f072f17b59b8d4558684c40fed6e2`
+**[⬇ cachyos-core-mba62-2026.09.09-x86_64.iso](https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/cachyos-core-mba62-2026.09.09-x86_64.iso)**
+· 1.06 GiB · [SHA256SUMS](https://github.com/Omargamal7/Cachyos-core/releases/download/iso-latest/SHA256SUMS)
+· `58722935013eae474a8d1a9c38ca5a2bb091c46563c6c5c7b16dae2318923a9a`
 
 It carries the debloated kernel, Chrome, and — compiled against that kernel
 while the image is assembled — the `wl` Wi-Fi module and the `facetimehd`
