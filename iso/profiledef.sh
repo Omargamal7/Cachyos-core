@@ -35,4 +35,5 @@ file_permissions=(
   ["/etc/sudoers.d/g_wheel"]="0:0:440"
   ["/usr/local/bin/install-to-disk"]="0:0:755"
   ["/usr/local/bin/live-session-setup"]="0:0:755"
+  ["/usr/local/bin/mba62-epb"]="0:0:755"
 )

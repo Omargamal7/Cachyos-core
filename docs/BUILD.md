@@ -136,3 +136,43 @@ VERBOSE=1 kernel/verify-config.sh /tmp/out.config kernel/*.conf
 
 It exits non-zero if any symbol in `critical-symbols.txt` is missing, so it
 is usable as a CI check.
+
+## Why not `linux-tkg`
+
+[linux-tkg](https://github.com/Frogging-Family/linux-tkg) is the other obvious
+way to get a BORE kernel with a Haswell `-march`, and it is a good project.
+It is not used here for one structural reason, plus a warning about the
+config snippets that circulate for it.
+
+**The structural reason: `localmodconfig` needs the target machine.**
+linux-tkg's module trimming (`_kernel_on_diet`, or `_modprobeddb` with
+[modprobed-db](https://wiki.archlinux.org/title/Modprobed-db)) decides what to
+keep from the *build host's* loaded modules. This repo builds in CI, on a
+cloud VM that shares no hardware with a 2013 MacBook Air, so trimming there
+would strip precisely the drivers this laptop needs and keep a pile of
+virtio. `kernel/20-mba62.conf` is an explicit allowlist instead: it is a
+statement about the laptop, so it produces the same kernel wherever it runs,
+and `kernel/verify-config.sh` fails the build if any of it went missing.
+Preloading modules with `modprobe` before the build does not fix this — you
+cannot `modprobe applesmc` on a machine that has no Apple SMC.
+
+**The warning: check option names against `customization.cfg`.**
+A `customization.cfg` making the rounds for this laptop sets six settings that
+do not exist in
+[the real file](https://github.com/Frogging-Family/linux-tkg/blob/master/customization.cfg):
+`_force_localmodconfig`, `_nocloseprompt`, `_kernel_source`,
+`_auto_mitigations` and `_winesync` (renamed `_ntsync`). linux-tkg ignores
+unknown settings silently, so the build appears to work. The damaging one is
+`_force_localmodconfig="true"`: the real knobs are `_kernel_on_diet` and
+`_modprobeddb`, and that same file sets `_modprobeddb="false"`, so **no module
+trimming happens at all** — the opposite of what the config claims to do.
+
+The same snippet puts its config overrides in
+`userpatches/macbookair62_core.myconfig`. linux-tkg reads config fragments
+from `*.myfrag` files *next to the PKGBUILD*, with `_user_patches` enabled —
+so that file is silently ignored too. It also sets `CONFIG_VIDEO_V4L2`, which
+has not been the symbol name for years; `CONFIG_VIDEO_DEV` is the current one
+(and is what `20-mba62.conf` uses).
+
+None of this makes linux-tkg a bad choice on a machine you build *on*. It
+does mean the snippets should be checked against upstream before use.

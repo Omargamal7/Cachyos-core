@@ -1,0 +1,16 @@
+# Apply the Intel energy/performance bias at boot.
+#
+# See /usr/local/bin/mba62-epb for why this is a service rather than a udev
+# rule, and why it does not need to be reapplied after resume.
+[Unit]
+Description=Energy/performance bias for MacBookAir6,2
+Documentation=https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
+ConditionPathExists=/sys/devices/system/cpu/cpu0/power/energy_perf_bias
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/mba62-epb balance-power
+
+[Install]
+WantedBy=multi-user.target

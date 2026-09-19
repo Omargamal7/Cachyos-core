@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Set the Intel energy/performance bias (EPB) on every CPU.
+#
+#   mba62-epb [value]      default: balance-power
+#
+# EPB is a 0-15 hint in MSR_IA32_ENERGY_PERF_BIAS telling the package power
+# management how to trade performance against energy. The kernel exposes it
+# per CPU at /sys/devices/system/cpu/cpuN/power/energy_perf_bias and accepts
+# a number, or one of these names:
+#
+#     performance  balance-performance  normal  balance-power  power
+#
+# Those are the exact strings in energy_perf_strings[] in
+# arch/x86/kernel/cpu/intel_epb.c. Note the *hyphens*: "balance_power" with
+# an underscore is not a synonym, it is rejected with EINVAL.
+#
+# Haswell-ULT comes up at "normal" (the EPB_INDEX_NORMAL override table in
+# intel_epb.c only covers Alder Lake-L, Gracemont and Raptor Lake-P, so this
+# machine keeps the stock default). "balance-power" gives up a little turbo
+# headroom for lower package power, which on a chassis this thin is the
+# difference between warm and hot.
+#
+# Why a service and not a udev rule: intel_epb_init() is a late_initcall, and
+# it attaches the attribute with sysfs_merge_group(), which emits no uevent.
+# There is no "add" event carrying power/energy_perf_bias for a rule to match.
+#
+# Running once at boot is enough. intel_epb registers syscore ops
+# (.suspend = intel_epb_save, .resume = intel_epb_restore) and the same
+# save/restore pair runs on CPU offline/online, so a value set here survives
+# suspend, hibernate and hotplug without being reapplied.
+set -euo pipefail
+
+value="${1:-balance-power}"
+
+shopt -s nullglob
+files=(/sys/devices/system/cpu/cpu*/power/energy_perf_bias)
+
+if [[ ${#files[@]} -eq 0 ]]; then
+    # No X86_FEATURE_EPB, or a non-Intel CPU. Not an error worth failing boot.
+    echo "energy_perf_bias not exposed by this CPU; nothing to do" >&2
+    exit 0
+fi
+
+for f in "${files[@]}"; do
+    if ! echo "$value" > "$f" 2>/dev/null; then
+        echo "failed to write '$value' to $f" >&2
+        exit 1
+    fi
+done
+
+echo "energy_perf_bias = $value on ${#files[@]} CPUs"

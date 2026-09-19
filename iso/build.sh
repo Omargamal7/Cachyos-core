@@ -166,6 +166,15 @@ install -Dm644 "$root"/hardware/mba62/tmpfiles.d/*.conf -t "$profile/airootfs/et
 # /etc/systemd/zram-generator.conf itself.
 install -Dm644 "$root/hardware/mba62/systemd/zram-generator.conf" \
     "$profile/airootfs/etc/systemd/zram-generator.conf"
+install -Dm755 "$root/hardware/mba62/bin/mba62-epb" "$profile/airootfs/usr/local/bin/mba62-epb"
+install -Dm644 "$root/hardware/mba62/systemd/mba62-epb.service" \
+    "$profile/airootfs/etc/systemd/system/mba62-epb.service"
+# systemctl cannot enable a unit in a tree that is not booted, so the
+# multi-user.target.wants symlink is created the same way archiso's own
+# profile does it -- by hand.
+mkdir -p "$profile/airootfs/etc/systemd/system/multi-user.target.wants"
+ln -sf /etc/systemd/system/mba62-epb.service \
+    "$profile/airootfs/etc/systemd/system/multi-user.target.wants/mba62-epb.service"
 
 # --------------------------------------------------------------- mkarchiso --
 
@@ -231,6 +240,8 @@ check "Terminator"                "/usr/bin/terminator"
 check "Nemo"                      "/usr/bin/nemo"
 check "desktop dotfiles in skel"  "/etc/skel/.config/openbox/autostart"
 check "hardware quirks"           "/etc/modprobe.d/10-mba62-input.conf"
+check "EPB helper"                "/usr/local/bin/mba62-epb"
+check "EPB service enabled"       "/etc/systemd/system/multi-user.target.wants/mba62-epb.service"
 # The installed system is a copy of this filesystem, so the memory tuning has
 # to be on the image -- not just in hardware/mba62/install.sh.
 check "zram configuration"        "/etc/systemd/zram-generator.conf"
