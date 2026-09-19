@@ -23,6 +23,14 @@ Boot-critical drivers are built in rather than modular, so the machine comes
 up without depending on an initramfs. A LUKS root still needs one — see
 "dm-crypt" below.
 
+### CPU mitigations are off by default
+
+The installed system boots with `mitigations=off`, which is a security decision
+rather than a hardware one: Haswell pays for the Spectre/Meltdown-era
+mitigations on every syscall, and this is a single-user laptop. It is one word
+on the kernel command line, and `docs/PERFORMANCE.md` covers what it costs and
+how to put it back.
+
 ### Audio needs no quirk
 
 A lot of old advice says to set `options snd_hda_intel model=mba6`. You do

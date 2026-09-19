@@ -1,0 +1,43 @@
+// Panel for the labwc session, standing in for xfce4-panel.
+//
+// Deliberately four modules. Every extra module is another thing polling on a
+// machine whose whole point is to stay out of its own way; the clock ticks at
+// 60s rather than 1s so it does not keep the CPU out of its idle states for a
+// display that shows minutes.
+//
+// Styling comes from /etc/xdg/waybar/style.css, which the waybar package
+// ships. Drop a style.css next to this file to override it.
+{
+  "layer": "top",
+  "position": "top",
+  "height": 26,
+  "modules-left": ["wlr/taskbar"],
+  "modules-center": ["clock"],
+  "modules-right": ["pulseaudio", "battery", "tray"],
+
+  "wlr/taskbar": {
+    "format": "{title:.20}",
+    "on-click": "activate"
+  },
+
+  "clock": {
+    "interval": 60,
+    "format": "{:%a %d %b  %H:%M}"
+  },
+
+  "pulseaudio": {
+    "format": "{volume}%",
+    "format-muted": "muted",
+    "on-click": "pavucontrol"
+  },
+
+  "battery": {
+    "interval": 30,
+    "states": { "warning": 20, "critical": 10 },
+    "format": "{capacity}%"
+  },
+
+  "tray": {
+    "spacing": 8
+  }
+}
