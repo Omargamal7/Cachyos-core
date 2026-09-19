@@ -1,8 +1,14 @@
 # Cachyos-core
 
-A debloated CachyOS **6.18 LTS + BORE** kernel and a minimal Openbox desktop,
-built for exactly one machine: a **MacBookAir6,2** (13-inch, Mid 2013 /
-Early 2014, Haswell-ULT).
+A debloated CachyOS **6.18 LTS + BORE** kernel and a minimal desktop for
+exactly one machine: a **MacBookAir6,2** (13-inch, Mid 2013 / Early 2014,
+Haswell-ULT, 4 GB).
+
+The desktop comes in three interchangeable sessions running the same
+applications: **Openbox** on X11 (default), **labwc** on Wayland (stacking,
+Openbox-shaped, so the comparison isolates the protocol), or **sway** on
+Wayland (tiling). `docs/PERFORMANCE.md` has the survey and, more importantly,
+`scripts/mba62-bench.sh` to measure them rather than guess.
 
 Nothing here tries to be a general-purpose distribution. The kernel config is
 an allowlist of the hardware in this laptop, and the desktop is Openbox +
@@ -31,7 +37,8 @@ kernel/     the kernel package: PKGBUILD, base config, debloat pipeline
 iso/        archiso profile + build script for the live/install image
 desktop/    package list, dotfiles and installer for the Openbox session
 hardware/   MacBookAir6,2 drivers, module options and quirks
-docs/       INSTALL.md, BUILD.md, HARDWARE.md, DEBLOAT.md
+docs/       INSTALL.md, BUILD.md, HARDWARE.md, DEBLOAT.md, PERFORMANCE.md
+scripts/    maintenance, and mba62-bench.sh for measuring changes
 ```
 
 ## Installing

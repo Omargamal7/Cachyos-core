@@ -1,0 +1,37 @@
+# labwc autostart, mirroring .config/openbox/autostart.
+#
+# Run as a shell script when the session starts. Everything the Openbox
+# autostart does, minus the pieces that only exist under X11: no picom (labwc
+# composites), no xfsettingsd (X11 XSettings), no xfce4-panel or
+# xfce4-power-manager (waybar and logind cover those).
+
+# Open the installer, but only when running from the USB stick.
+# /run/archiso/bootmnt exists only in the live environment, so this is a no-op
+# once installed -- which matters, because the installer copies this
+# filesystem verbatim onto the disk.
+if [ -d /run/archiso/bootmnt ] && [ -x /usr/local/bin/install-to-disk ]; then
+    /usr/local/bin/install-to-disk &
+fi
+
+# Wallpaper. Drop a file at ~/.config/labwc/wallpaper.jpg to use your own.
+if [ -f "$HOME/.config/labwc/wallpaper.jpg" ]; then
+    swaybg -i "$HOME/.config/labwc/wallpaper.jpg" -m fill &
+else
+    swaybg -c '#1d2021' &
+fi
+
+# Panel, with the system tray nm-applet needs.
+waybar &
+
+# Notifications, in place of xfce4-notifyd.
+mako &
+
+# Network applet, in waybar's tray.
+nm-applet --indicator &
+
+# PolicyKit agent -- without one, Nemo cannot mount internal partitions and
+# anything asking for authentication silently fails.
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+
+# Standard user directories (Desktop, Downloads, ...) on first login.
+xdg-user-dirs-update &

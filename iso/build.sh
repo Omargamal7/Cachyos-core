@@ -160,6 +160,12 @@ install -Dm644 "$root"/hardware/mba62/modprobe.d/*.conf -t "$profile/airootfs/et
 install -Dm644 "$root"/hardware/mba62/X11/xorg.conf.d/*.conf -t "$profile/airootfs/etc/X11/xorg.conf.d/"
 install -Dm644 "$root"/hardware/mba62/udev/rules.d/*.rules -t "$profile/airootfs/etc/udev/rules.d/"
 install -Dm644 "$root/hardware/mba62/mbpfan.conf" "$profile/airootfs/etc/mbpfan.conf"
+install -Dm644 "$root"/hardware/mba62/sysctl.d/*.conf -t "$profile/airootfs/etc/sysctl.d/"
+install -Dm644 "$root"/hardware/mba62/tmpfiles.d/*.conf -t "$profile/airootfs/etc/tmpfiles.d/"
+# Single file rather than a drop-in directory: zram-generator reads
+# /etc/systemd/zram-generator.conf itself.
+install -Dm644 "$root/hardware/mba62/systemd/zram-generator.conf" \
+    "$profile/airootfs/etc/systemd/zram-generator.conf"
 install -Dm755 "$root/hardware/mba62/bin/mba62-epb" "$profile/airootfs/usr/local/bin/mba62-epb"
 install -Dm644 "$root/hardware/mba62/systemd/mba62-epb.service" \
     "$profile/airootfs/etc/systemd/system/mba62-epb.service"
@@ -236,6 +242,12 @@ check "desktop dotfiles in skel"  "/etc/skel/.config/openbox/autostart"
 check "hardware quirks"           "/etc/modprobe.d/10-mba62-input.conf"
 check "EPB helper"                "/usr/local/bin/mba62-epb"
 check "EPB service enabled"       "/etc/systemd/system/multi-user.target.wants/mba62-epb.service"
+# The installed system is a copy of this filesystem, so the memory tuning has
+# to be on the image -- not just in hardware/mba62/install.sh.
+check "zram configuration"        "/etc/systemd/zram-generator.conf"
+check "memory sysctls"            "/etc/sysctl.d/99-mba62-memory.conf"
+check "zswap off rule"            "/etc/tmpfiles.d/99-mba62-zswap.conf"
+check "zram-generator"            "/usr/lib/systemd/system-generators/zram-generator"
 # There is deliberately no intel-ucode.img on the ISO. mkinitcpio's microcode
 # hook embeds the microcode into the initramfs from the individual firmware
 # files, so archiso sets need_external_ucodes=0 and copies no image. Those
